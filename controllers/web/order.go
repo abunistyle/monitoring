@@ -28,6 +28,7 @@ func (o *Order) Run(funList []string) {
         myFunList = RunFunList
     }
     fmt.Println(myFunList)
+
     remainCount := int64(len(myFunList))
     v := reflect.ValueOf(o)
     for _, fun := range myFunList {
