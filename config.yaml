@@ -1,0 +1,15 @@
+modules:
+  web:
+    db:
+      host: 127.0.0.1
+      port: 34060
+      dbName: vbridal
+      username: jjs0517cmscronjob
+      password: vbridalcommonpass
+      config: charset=utf8mb4&parseTime=True&loc=Local
+      maxOpenConns: 20
+      maxIdleConns: 5
+    groupMap:
+      order:
+        db:
+#          dbName: test1
