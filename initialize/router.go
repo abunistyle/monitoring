@@ -1,16 +1,15 @@
 package initialize
 
 import (
-    "monitoring/controllers/web"
-    "reflect"
+    "github.com/gin-gonic/gin"
+    "monitoring/router"
 )
 
-var (
-    routerMap = map[string]reflect.Type{
-        "web.order": reflect.TypeOf(web.Order{}),
-    }
-)
+func Routers() *gin.Engine {
+    Router := gin.Default()
+    PublicGroup := Router.Group("")
+    webRouter := router.Web{}
+    webRouter.InitWebRouter(PublicGroup)
+    return Router
 
-func GetType(router string) reflect.Type {
-    return routerMap[router]
 }

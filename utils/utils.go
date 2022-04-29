@@ -1,5 +1,12 @@
 package utils
 
+import (
+    "crypto/md5"
+    "encoding/hex"
+    "fmt"
+    "strings"
+)
+
 func ArrayContains[T comparable](s []T, e T) bool {
     for _, v := range s {
         if v == e {
@@ -15,4 +22,16 @@ func MapCopy[T comparable](m map[string]T) map[string]T {
     for id, m2[id] = range m {
     }
     return m2
+}
+
+func MD5(v string) string {
+    d := []byte(v)
+    m := md5.New()
+    m.Write(d)
+    return hex.EncodeToString(m.Sum(nil))
+}
+
+func GenDbIndexKey(moduleName string, groupName string) string {
+    key := fmt.Sprintf("%s|%s", strings.ToLower(moduleName), strings.ToLower(groupName))
+    return key
 }

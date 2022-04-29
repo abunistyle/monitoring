@@ -4,10 +4,13 @@ import (
     "errors"
     "fmt"
     "github.com/ulule/deepcopier"
+    "gorm.io/gorm"
     "monitoring/config"
+    "monitoring/global"
+    "monitoring/utils"
 )
 
-func GetMysqlConfig(myconfig *config.Config, pModuleName string, pGroupName string) (mysqlConfig config.Db, err error) {
+func getDBConfig(myconfig *config.Config, pModuleName string, pGroupName string) (mysqlConfig config.Db, err error) {
     moduleExist := false
     for name, module := range myconfig.ModuleMap {
         if pModuleName != name {
@@ -51,4 +54,47 @@ func GetMysqlConfig(myconfig *config.Config, pModuleName string, pGroupName stri
         err = errors.New(fmt.Sprintf("module %s not exist!\n", pModuleName))
     }
     return mysqlConfig, err
+}
+
+func getDBConfigList(myconfig *config.Config) (map[string]string, map[string]config.Db) {
+    dbConfigIndexMap := make(map[string]string)
+    dbConfigMap := make(map[string]config.Db)
+    for moduleName, module := range myconfig.ModuleMap {
+        for groupName := range module.GroupMap {
+            dbConfig, err := getDBConfig(myconfig, moduleName, groupName)
+            if err != nil {
+                fmt.Println(err.Error())
+                continue
+            }
+            key1 := utils.GenDbIndexKey(moduleName, groupName)
+            key2 := utils.MD5(fmt.Sprintf("%s|%d|%s|%s", dbConfig.Host, dbConfig.Port, dbConfig.DbName, dbConfig.Config))
+            _, key2Exist := dbConfigMap[key2]
+            if !key2Exist {
+                dbConfigMap[key2] = dbConfig
+            }
+            dbConfigIndexMap[key1] = key2
+        }
+    }
+
+    return dbConfigIndexMap, dbConfigMap
+}
+
+func InitDBList(myconfig *config.Config) {
+    dbConfigIndexMap, dbConfigMap := getDBConfigList(myconfig)
+    dbMap := make(map[string]*gorm.DB)
+    if global.DBMap == nil {
+        global.DBMap = make(map[string]*gorm.DB)
+    }
+    for key, dbConfig := range dbConfigMap {
+        db := GormMysqlByConfig(dbConfig)
+        global.DBList = append(global.DBList, db)
+        dbMap[key] = db
+    }
+    for key, indexKey := range dbConfigIndexMap {
+        _, indexKeyExist := dbMap[indexKey]
+        if !indexKeyExist {
+            continue
+        }
+        global.SetDBByKey(key, dbMap[indexKey])
+    }
 }

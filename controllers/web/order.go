@@ -2,7 +2,9 @@ package web
 
 import (
     "fmt"
-    "monitoring/global"
+    "github.com/gin-gonic/gin"
+    "gorm.io/gorm"
+    response "monitoring/model/common"
     "monitoring/model/web/order"
     "monitoring/utils"
     "reflect"
@@ -10,7 +12,9 @@ import (
     "time"
 )
 
-type Order struct{}
+type Order struct {
+    DB *gorm.DB
+}
 
 var (
     RunFunList = []string{"Gmv", "TestGmv"}
@@ -52,13 +56,13 @@ func (o *Order) getAllRunFuns() *[]string {
     return &RunFunList
 }
 
-func (o *Order) Gmv(remainCount *int64) {
-    db := global.DB
+func (o *Order) Gmv(c *gin.Context) {
     var result []order.Gmv
     sql := "SELECT\n\t\tproject_name,\n\t\tSUM(oi.goods_amount) AS goods_amount\n\tFROM\n\t\torder_info oi\n\tWHERE \n\t\toi.order_time BETWEEN '2022-01-01 00:00:00' AND '2022-12-20 00:00:00' \n\t\tAND pay_status IN (1,2)\n\t\tAND oi.email NOT LIKE '%@tetx.com' \n\t\tAND oi.email NOT LIKE '%@i9i8.com' \n\t\tAND oi.email NOT LIKE '%@qq.com' \n\t\tAND oi.email NOT LIKE '%@163.com' \n\t\tAND oi.email NOT LIKE '%@jjshouse.com' \n\t\tAND oi.email NOT LIKE '%@jenjenhouse.com'\nGROUP BY oi.project_name"
-    db.Raw(sql).Scan(&result)
-    fmt.Println(result)
-    atomic.AddInt64(remainCount, -1)
+    o.DB.Raw(sql).Scan(&result)
+    response.OkWithDetailed(result, "success", c)
+    //fmt.Println(result)
+    //atomic.AddInt64(remainCount, -1)
 }
 
 func (o *Order) TestGmv(remainCount *int64) {

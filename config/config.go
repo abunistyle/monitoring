@@ -3,7 +3,12 @@ package config
 import "strconv"
 
 type Config struct {
-    ModuleMap map[string]Module `yaml:"modules"`
+    Application Application       `yaml:"application"`
+    ModuleMap   map[string]Module `yaml:"modules"`
+}
+
+type Application struct {
+    Port uint64 `yaml:"port"`
 }
 
 type Module struct {

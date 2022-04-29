@@ -1,3 +1,5 @@
+application:
+  port: 8080
 modules:
   web:
     db:
@@ -6,10 +8,10 @@ modules:
       dbName: vbridal
       username: jjs0517cmscronjob
       password: vbridalcommonpass
-      config: charset=utf8mb4&parseTime=True&loc=Local
+      config: charset=utf8mb4&parseTime=True&loc=America%2FLos_Angeles
       maxOpenConns: 20
       maxIdleConns: 5
     groupMap:
       order:
         db:
-#          dbName: test1
+          dbName: vbridal
