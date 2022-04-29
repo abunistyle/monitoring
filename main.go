@@ -17,14 +17,12 @@ func main() {
 
     //yaml文件内容影射到结构体中
     var myconfig config.Config
-    //myconfig := make(map[interface{}]interface{})
     err1 := yaml.Unmarshal(file, &myconfig)
     if err1 != nil {
         fmt.Println(err1)
         os.Exit(1)
         return
     }
-    //core.RunWindowsServer(&myconfig)
     initialize.InitDBList(&myconfig)
     router := initialize.Routers()
     router.Run()
