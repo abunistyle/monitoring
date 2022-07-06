@@ -16,11 +16,14 @@ import (
 )
 
 func main() {
+    rootPath := flag.String("r", "./", "请输入程序根路径")
     configFileName := flag.String("c", "./config.yaml", "请输入配置文件路径")
+    flag.Parse()
     file, err := ioutil.ReadFile(*configFileName)
     if err != nil {
         fmt.Print(err)
     }
+    fmt.Println(fmt.Sprintf("root path: %s, config file name: %s", *rootPath, *configFileName))
 
     //yaml文件内容影射到结构体中
     var myconfig config.Config
@@ -46,6 +49,7 @@ func main() {
         err := errors.New(fmt.Sprintf("module:%s, group:%s, db not exist!", "web", "order"))
         panic(err)
     }
+    fmt.Println("app running...")
     paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB}
     paySuccessMonitor.NewPaySuccessMonitor()
     http.Handle("/metrics/web/paySuccess", promhttp.Handler())
