@@ -33,7 +33,7 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
     currentTime := time.Unix(tmpTime.Unix(), 0).In(newYorkLocation)
     m, _ := time.ParseDuration("-10m")
     endTime := currentTime.Add(m)
-    m, _ = time.ParseDuration("-30h")
+    m, _ = time.ParseDuration("-3h")
     startTime := endTime.Add(m)
 
     originData := p.GetOriginData(startTime, endTime)
