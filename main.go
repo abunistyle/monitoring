@@ -49,9 +49,10 @@ func main() {
         err := errors.New(fmt.Sprintf("module:%s, group:%s, db not exist!", "web", "order"))
         panic(err)
     }
-    fmt.Println("app running...")
+    fmt.Println(myconfig.Application.Port)
+    fmt.Println(fmt.Sprintf("application running on port %d", myconfig.Application.Port))
     paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB}
     paySuccessMonitor.NewPaySuccessMonitor()
     http.Handle("/metrics/web/paySuccess", promhttp.Handler())
-    http.ListenAndServe(":8080", nil)
+    http.ListenAndServe(fmt.Sprintf(":%d", myconfig.Application.Port), nil)
 }
