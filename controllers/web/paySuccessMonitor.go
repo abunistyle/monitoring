@@ -6,7 +6,6 @@ import (
     "github.com/prometheus/client_golang/prometheus/promauto"
     "gorm.io/gorm"
     "monitoring/model/web/order"
-    "strconv"
     "time"
 )
 
@@ -95,24 +94,28 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
 func (p *PaySuccessMonitor) NewPaySuccessMonitor() {
     monitorData := p.GetMonitorData()
 
-    gaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-        Name: "pay_success",
+    trySuccessRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_try_success_rate",
+        Help: "尝试支付成功率",
+    },
+        []string{"project_mame", "payment_code", "platform"},
+    )
+    successRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_success_rate",
         Help: "支付成功率",
     },
-        []string{"projectName", "paymentCode", "platform", "trySuccessRate", "successRate", "successCount", "tryCount", "allCount", "trySuccessRateChange", "successRateChange"},
+        []string{"projectName", "paymentCode", "platform"},
     )
     for _, row := range monitorData {
-        gaugeVec.With(prometheus.Labels{
-            "projectName":          row.ProjectName,
-            "paymentCode":          row.PaymentCode,
-            "platform":             row.Platform,
-            "trySuccessRate":       strconv.FormatFloat(row.TrySuccessRate, 'f', 4, 64),
-            "successRate":          strconv.FormatFloat(row.SuccessRate, 'f', 4, 64),
-            "successCount":         strconv.FormatInt(row.SuccessCount, 10),
-            "tryCount":             strconv.FormatInt(row.TryCount, 10),
-            "allCount":             strconv.FormatInt(row.AllCount, 10),
-            "trySuccessRateChange": strconv.FormatFloat(row.TrySuccessRateChange, 'f', 4, 64),
-            "successRateChange":    strconv.FormatFloat(row.SuccessRateChange, 'f', 4, 64),
-        })
+        trySuccessRateGaugeVec.With(prometheus.Labels{
+            "projectName": row.ProjectName,
+            "paymentCode": row.PaymentCode,
+            "platform":    row.Platform,
+        }).Set(row.TrySuccessRate)
+        successRateGaugeVec.With(prometheus.Labels{
+            "projectName": row.ProjectName,
+            "paymentCode": row.PaymentCode,
+            "platform":    row.Platform,
+        }).Set(row.SuccessRate)
     }
 }
