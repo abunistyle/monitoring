@@ -6,6 +6,7 @@ import (
     "github.com/prometheus/client_golang/prometheus/promauto"
     "gorm.io/gorm"
     "monitoring/model/web/order"
+    "strconv"
     "time"
 )
 
@@ -72,10 +73,25 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
         //}
         var resultRow order.PaySuccessMonitor
         if lastRowExist {
+            var trySuccessRateChange float64
+            var successRateChange float64
+            if lastRow.TrySuccessRate > 0 {
+                trySuccessRateChange = (lastRow.TrySuccessRate - row.TrySuccessRate) / lastRow.TrySuccessRate
+                trySuccessRateChange, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", trySuccessRateChange), 64)
+            } else {
+                trySuccessRateChange = 0
+            }
+
+            if lastRow.SuccessRate > 0 {
+                successRateChange = (lastRow.SuccessRate - row.SuccessRate) / lastRow.SuccessRate
+                successRateChange, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", successRateChange), 64)
+            } else {
+                trySuccessRateChange = 0
+            }
             resultRow = order.PaySuccessMonitor{
                 PaySuccess:           row,
-                TrySuccessRateChange: (lastRow.TrySuccessRate - row.TrySuccessRate) / lastRow.TrySuccessRate,
-                SuccessRateChange:    (lastRow.SuccessRate - row.SuccessRate) / lastRow.SuccessRate,
+                TrySuccessRateChange: trySuccessRateChange,
+                SuccessRateChange:    successRateChange,
             }
         } else {
             resultRow = order.PaySuccessMonitor{
