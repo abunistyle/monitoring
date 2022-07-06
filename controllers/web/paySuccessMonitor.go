@@ -86,7 +86,7 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
                 successRateChange = (lastRow.SuccessRate - row.SuccessRate) / lastRow.SuccessRate
                 successRateChange, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", successRateChange), 64)
             } else {
-                trySuccessRateChange = 0
+                successRateChange = 0
             }
             resultRow = order.PaySuccessMonitor{
                 PaySuccess:           row,
@@ -107,8 +107,7 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
 }
 
 //创建结构体及对应的指标信息
-func (p *PaySuccessMonitor) NewPaySuccessMonitor() {
-    monitorData := p.GetMonitorData()
+func (p *PaySuccessMonitor) SetMonitor() {
     trySuccessRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
         Name: "pay_success_try_success_rate",
         Help: "尝试支付成功率",
@@ -133,6 +132,17 @@ func (p *PaySuccessMonitor) NewPaySuccessMonitor() {
     },
         []string{"project_name", "payment_code", "platform"},
     )
+    go func() {
+        for {
+            p.RecordMetrics(trySuccessRateGaugeVec, successRateGaugeVec, trySuccessRateChangeGaugeVec, successRateChangeGaugeVec)
+            time.Sleep(10 * time.Second)
+        }
+    }()
+}
+
+//创建结构体及对应的指标信息
+func (p *PaySuccessMonitor) RecordMetrics(trySuccessRateGaugeVec *prometheus.GaugeVec, successRateGaugeVec *prometheus.GaugeVec, trySuccessRateChangeGaugeVec *prometheus.GaugeVec, successRateChangeGaugeVec *prometheus.GaugeVec) {
+    monitorData := p.GetMonitorData()
     for _, row := range monitorData {
         trySuccessRateGaugeVec.With(prometheus.Labels{
             "project_name": row.ProjectName,

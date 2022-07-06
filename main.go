@@ -52,7 +52,7 @@ func main() {
     fmt.Println(myconfig.Application.Port)
     fmt.Println(fmt.Sprintf("application running on port %d", myconfig.Application.Port))
     paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB}
-    paySuccessMonitor.NewPaySuccessMonitor()
+    paySuccessMonitor.SetMonitor()
     http.Handle("/metrics/web/paySuccess", promhttp.Handler())
     http.ListenAndServe(fmt.Sprintf(":%d", myconfig.Application.Port), nil)
 }
