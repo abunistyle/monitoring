@@ -98,24 +98,24 @@ func (p *PaySuccessMonitor) NewPaySuccessMonitor() {
         Name: "pay_success_try_success_rate",
         Help: "尝试支付成功率",
     },
-        []string{"project_mame", "payment_code", "platform"},
+        []string{"project_name", "payment_code", "platform"},
     )
     successRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
         Name: "pay_success_success_rate",
         Help: "支付成功率",
     },
-        []string{"projectName", "paymentCode", "platform"},
+        []string{"project_name", "payment_code", "platform"},
     )
     for _, row := range monitorData {
         trySuccessRateGaugeVec.With(prometheus.Labels{
-            "projectName": row.ProjectName,
-            "paymentCode": row.PaymentCode,
-            "platform":    row.Platform,
+            "project_name": row.ProjectName,
+            "payment_code": row.PaymentCode,
+            "platform":     row.Platform,
         }).Set(row.TrySuccessRate)
         successRateGaugeVec.With(prometheus.Labels{
-            "projectName": row.ProjectName,
-            "paymentCode": row.PaymentCode,
-            "platform":    row.Platform,
+            "project_name": row.ProjectName,
+            "payment_code": row.PaymentCode,
+            "platform":     row.Platform,
         }).Set(row.SuccessRate)
     }
 }
