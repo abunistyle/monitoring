@@ -6,7 +6,10 @@ import (
     "github.com/prometheus/client_golang/prometheus/promauto"
     "gorm.io/gorm"
     "monitoring/model/web/order"
+    "net/http"
+    "net/url"
     "strconv"
+    "strings"
     "time"
 )
 
@@ -18,7 +21,7 @@ func (p *PaySuccessMonitor) GetOriginData(startTime time.Time, endTime time.Time
     var result []order.PaySuccess
     startTimeStr := startTime.Format("2006-01-02 15:04:05")
     endTimeStr := endTime.Format("2006-01-02 15:04:05")
-    sql := fmt.Sprintf("SELECT\n    project_name,\n    payment_code,\n    platform,\n    SUM(IF(pt_id IS NOT NULL AND pay_status IN (1,2), 1, 0)) / SUM(IF(pt_id IS NOT NULL , 1, 0)) AS `try_success_rate`,\n    SUM(IF(pt_id IS NOT NULL AND pay_status IN (1,2), 1, 0)) / COUNT(0) AS `success_rate`,\n    SUM(IF(pt_id IS NOT NULL AND pay_status IN (1,2), 1, 0)) AS `success_count`,\n    SUM(IF(pt_id IS NOT NULL , 1, 0)) AS `try_count`,\n    COUNT(0) as `all_count`\nFROM\n\t(\n\tSELECT\n\t    oi.project_name,\n\t\toi.order_sn,\n\t\toi.pay_status,\n\t\toi.payment_id,\n\t\tp.payment_code,\n\t\toi.order_time,\n\t\toi.pay_time,\n\t\tLEFT (oi.order_time,13) AS order_hour,\n\t\tCASE\n\t\t\tWHEN POSITION('api.' IN oi.from_domain) = 0 THEN 'PC'\n\t\t\tWHEN POSITION('lq-App' IN ua.agent_type) > 0 THEN 'APP'\n\t\t\tELSE 'H5'\n\t\tEND AS platform,\n\t\tpt.id as pt_id,\n\t\tpt.payment_code as pt_payment_code\n\tFROM\n\t\torder_info oi\n\tLEFT JOIN payment p on p.payment_id = oi.payment_id\n\tLEFT JOIN paypal_txn pt ON pt.order_sn = oi.order_sn\n\tLEFT JOIN user_agent ua ON ua.user_agent_id = oi.user_agent_id\n\tWHERE\n\t\toi.order_time BETWEEN '%s' AND '%s'\n\t\tAND oi.email NOT LIKE '%@tetx.com'\n\t\tAND oi.email NOT LIKE '%@i9i8.com'\n\t\tAND oi.email NOT LIKE '%@qq.com'\n\t\tAND oi.email NOT LIKE '%@163.com'\n\t\tAND oi.email NOT LIKE '%@jjshouse.com'\n\t\tAND oi.email NOT LIKE '%@jenjenhouse.com'\n\t    AND oi.email NOT LIKE '%@abunistyle.com'\n\tGROUP BY oi.order_sn,pt.payment_code\n\t) t0\nGROUP BY\n    t0.project_name,\n    t0.payment_id,\n    t0.platform", startTimeStr, endTimeStr)
+    sql := fmt.Sprintf("SELECT\n    project_name,\n    payment_code,\n    platform,\n    SUM(IF(pt_id IS NOT NULL AND pay_status IN (1,2), 1, 0)) / SUM(IF(pt_id IS NOT NULL , 1, 0)) AS `try_success_rate`,\n    SUM(IF(pt_id IS NOT NULL AND pay_status IN (1,2), 1, 0)) / COUNT(0) AS `success_rate`,\n    SUM(IF(pt_id IS NOT NULL AND pay_status IN (1,2), 1, 0)) AS `success_count`,\n    SUM(IF(pt_id IS NOT NULL , 1, 0)) AS `try_count`,\n    COUNT(0) as `all_count`\nFROM\n\t(\n\tSELECT\n\t    oi.project_name,\n\t\toi.order_sn,\n\t\toi.pay_status,\n\t\toi.payment_id,\n\t\tp.payment_code,\n\t\toi.order_time,\n\t\toi.pay_time,\n\t\tLEFT (oi.order_time,13) AS order_hour,\n\t\tCASE\n\t\t\tWHEN POSITION('api.' IN oi.from_domain) = 0 THEN 'PC'\n\t\t\tWHEN POSITION('lq-App' IN ua.agent_type) > 0 THEN 'APP'\n\t\t\tELSE 'H5'\n\t\tEND AS platform,\n\t\tpt.id as pt_id,\n\t\tpt.payment_code as pt_payment_code\n\tFROM\n\t\torder_info oi\n\tLEFT JOIN payment p on p.payment_id = oi.payment_id\n\tLEFT JOIN paypal_txn pt ON pt.order_sn = oi.order_sn\n\tLEFT JOIN user_agent ua ON ua.user_agent_id = oi.user_agent_id\n\tWHERE\n\t\toi.order_time BETWEEN '%s' AND '%s'\n\t\tAND oi.email NOT LIKE '%%@tetx.com'\n\t\tAND oi.email NOT LIKE '%%@i9i8.com'\n\t\tAND oi.email NOT LIKE '%%@qq.com'\n\t\tAND oi.email NOT LIKE '%%@163.com'\n\t\tAND oi.email NOT LIKE '%%@jjshouse.com'\n\t\tAND oi.email NOT LIKE '%%@jenjenhouse.com'\n\t    AND oi.email NOT LIKE '%%@abunistyle.com'\n\tGROUP BY oi.order_sn,pt.payment_code\n\t) t0\nGROUP BY\n    t0.project_name,\n    t0.payment_id,\n    t0.platform", startTimeStr, endTimeStr)
     p.DB.Raw(sql).Scan(&result)
     return result
 }
@@ -135,6 +138,17 @@ func (p *PaySuccessMonitor) SetMonitor() {
     go func() {
         for {
             p.RecordMetrics(trySuccessRateGaugeVec, successRateGaugeVec, trySuccessRateChangeGaugeVec, successRateChangeGaugeVec)
+            time.Sleep(600 * time.Second)
+        }
+    }()
+
+    go func() {
+        for {
+            currentTime := time.Now()
+            if currentTime.Minute() == 0 || currentTime.Minute() == 30 {
+                p.SendNotice()
+            }
+            p.SendNotice()
             time.Sleep(60 * time.Second)
         }
     }()
@@ -165,4 +179,64 @@ func (p *PaySuccessMonitor) RecordMetrics(trySuccessRateGaugeVec *prometheus.Gau
             "platform":     row.Platform,
         }).Set(row.SuccessRateChange)
     }
+}
+
+func (p *PaySuccessMonitor) SendNotice() {
+    monitorData := p.GetMonitorData()
+    //for _, row := range monitorData {
+    //    fmt.Println(row)
+    //}
+    var successRateMessageList []string
+    var trySuccessRateMessageList []string
+    var successRateChangeMessageList []string
+    var trySuccessRateChangeMessageList []string
+    for _, row := range monitorData {
+        if row.SuccessRate < 0.4 {
+            successRateMessage := fmt.Sprintf("支付方式:%s,平台:%s,支付成功率:%f", row.PaymentCode, row.Platform, row.SuccessRate)
+            successRateMessageList = append(successRateMessageList, successRateMessage)
+        }
+        if row.TrySuccessRate < 0.4 {
+            trySuccessRateMessage := fmt.Sprintf("支付方式:%s,平台:%s,尝试支付成功率:%f", row.PaymentCode, row.Platform, row.TrySuccessRate)
+            trySuccessRateMessageList = append(trySuccessRateMessageList, trySuccessRateMessage)
+        }
+        if row.SuccessRateChange > 0.2 {
+            successRateChangeMessage := fmt.Sprintf("支付方式:%s,平台:%s,支付成功率同比变化:%f", row.PaymentCode, row.Platform, row.SuccessRateChange)
+            successRateChangeMessageList = append(successRateChangeMessageList, successRateChangeMessage)
+        }
+        if row.TrySuccessRateChange > 0.2 {
+            trySuccessRateChangeMessage := fmt.Sprintf("支付方式:%s,平台:%s,尝试支付成功率同比变化:%f", row.PaymentCode, row.Platform, row.SuccessRateChange)
+            trySuccessRateChangeMessageList = append(trySuccessRateChangeMessageList, trySuccessRateChangeMessage)
+        }
+    }
+    if len(successRateMessageList) > 0 {
+        successRateMessage := "[支付成功率]\n" + strings.Join(successRateMessageList, "\n")
+        fmt.Println(successRateMessage)
+        p.RunSendNotice(successRateMessage)
+    }
+    if len(trySuccessRateMessageList) > 0 {
+        trySuccessRateMessage := "[尝试支付成功率]\n" + strings.Join(trySuccessRateMessageList, "\n")
+        fmt.Println(trySuccessRateMessage)
+        p.RunSendNotice(trySuccessRateMessage)
+    }
+    if len(successRateChangeMessageList) > 0 {
+        successRateChangeMessage := "[支付成功率同比变化]\n" + strings.Join(successRateChangeMessageList, "\n")
+        fmt.Println(successRateChangeMessage)
+        p.RunSendNotice(successRateChangeMessage)
+    }
+    if len(trySuccessRateChangeMessageList) > 0 {
+        trySuccessRateChangeMessage := "[尝试支付成功率同比变化]\n" + strings.Join(trySuccessRateChangeMessageList, "\n")
+        fmt.Println(trySuccessRateChangeMessage)
+        p.RunSendNotice(trySuccessRateChangeMessage)
+    }
+}
+
+func (p *PaySuccessMonitor) RunSendNotice(message string) {
+    go func() {
+        resp, err := http.Get(fmt.Sprintf("https://voice.abunistyle.com/notice/singleCallByTts?system=CMS&errorMsg=%s", url.QueryEscape(message)))
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        fmt.Println(resp)
+    }()
 }
