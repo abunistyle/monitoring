@@ -148,8 +148,8 @@ func (p *PaySuccessMonitor) SetMonitor() {
             if currentTime.Minute() == 0 || currentTime.Minute() == 30 {
                 p.SendNotice()
             }
-            p.SendNotice()
-            time.Sleep(60 * time.Second)
+            //p.SendNotice()
+            time.Sleep(30 * time.Second)
         }
     }()
 }
