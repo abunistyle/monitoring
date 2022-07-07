@@ -232,7 +232,7 @@ func (p *PaySuccessMonitor) SendNotice() {
 
 func (p *PaySuccessMonitor) RunSendNotice(message string) {
     go func() {
-        resp, err := http.Get(fmt.Sprintf("https://voice.abunistyle.com/notice/singleCallByTts?system=CMS&errorMsg=%s", url.QueryEscape(message)))
+        resp, err := http.Get(fmt.Sprintf("https://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
         if err != nil {
             fmt.Println(err)
             return
