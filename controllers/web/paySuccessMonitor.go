@@ -1,6 +1,7 @@
 package web
 
 import (
+    "encoding/json"
     "fmt"
     "github.com/prometheus/client_golang/prometheus"
     "github.com/prometheus/client_golang/prometheus/promauto"
@@ -183,9 +184,12 @@ func (p *PaySuccessMonitor) RecordMetrics(trySuccessRateGaugeVec *prometheus.Gau
 
 func (p *PaySuccessMonitor) SendNotice() {
     monitorData := p.GetMonitorData()
-    //for _, row := range monitorData {
-    //    fmt.Println(row)
-    //}
+    for _, row := range monitorData {
+        bytes1, err := json.Marshal(&row)
+        if err == nil {
+            fmt.Println("row: ", string(bytes1))
+        }
+    }
     var successRateMessageList []string
     var trySuccessRateMessageList []string
     var successRateChangeMessageList []string
