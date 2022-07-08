@@ -146,7 +146,7 @@ func (p *PaySuccessMonitor) SetMonitor() {
     go func() {
         for {
             currentTime := time.Now()
-            if currentTime.Minute() == 0 || currentTime.Minute() == 30 {
+            if currentTime.Minute() == 0 || currentTime.Minute() == 30 || currentTime.Minute() > 0 {
                 p.SendNotice()
             }
             //p.SendNotice()
@@ -236,7 +236,7 @@ func (p *PaySuccessMonitor) SendNotice() {
 
 func (p *PaySuccessMonitor) RunSendNotice(message string) {
     go func() {
-        resp, err := http.Get(fmt.Sprintf("https://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
+        resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
         if err != nil {
             fmt.Println(err)
             return
