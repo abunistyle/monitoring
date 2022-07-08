@@ -80,14 +80,14 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
             var trySuccessRateChange float64
             var successRateChange float64
             if lastRow.TrySuccessRate > 0 {
-                trySuccessRateChange = (lastRow.TrySuccessRate - row.TrySuccessRate) / lastRow.TrySuccessRate
+                trySuccessRateChange = (row.TrySuccessRate - lastRow.TrySuccessRate) / lastRow.TrySuccessRate
                 trySuccessRateChange, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", trySuccessRateChange), 64)
             } else {
                 trySuccessRateChange = 0
             }
 
             if lastRow.SuccessRate > 0 {
-                successRateChange = (lastRow.SuccessRate - row.SuccessRate) / lastRow.SuccessRate
+                successRateChange = (row.SuccessRate - lastRow.SuccessRate) / lastRow.SuccessRate
                 successRateChange, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", successRateChange), 64)
             } else {
                 successRateChange = 0
@@ -195,6 +195,10 @@ func (p *PaySuccessMonitor) SendNotice() {
     var successRateChangeMessageList []string
     var trySuccessRateChangeMessageList []string
     for _, row := range monitorData {
+        //订单量太少没有参考价值，可不报警
+        if row.AllCount < 5 {
+            continue
+        }
         if row.SuccessRate < 0.4 {
             successRateMessage := fmt.Sprintf("支付方式:%s,平台:%s,支付成功率:%f", row.PaymentCode, row.Platform, row.SuccessRate)
             successRateMessageList = append(successRateMessageList, successRateMessage)
@@ -203,11 +207,11 @@ func (p *PaySuccessMonitor) SendNotice() {
             trySuccessRateMessage := fmt.Sprintf("支付方式:%s,平台:%s,尝试支付成功率:%f", row.PaymentCode, row.Platform, row.TrySuccessRate)
             trySuccessRateMessageList = append(trySuccessRateMessageList, trySuccessRateMessage)
         }
-        if row.SuccessRateChange > 0.2 {
+        if row.SuccessRateChange < -0.2 {
             successRateChangeMessage := fmt.Sprintf("支付方式:%s,平台:%s,支付成功率同比变化:%f", row.PaymentCode, row.Platform, row.SuccessRateChange)
             successRateChangeMessageList = append(successRateChangeMessageList, successRateChangeMessage)
         }
-        if row.TrySuccessRateChange > 0.2 {
+        if row.TrySuccessRateChange < -0.2 {
             trySuccessRateChangeMessage := fmt.Sprintf("支付方式:%s,平台:%s,尝试支付成功率同比变化:%f", row.PaymentCode, row.Platform, row.SuccessRateChange)
             trySuccessRateChangeMessageList = append(trySuccessRateChangeMessageList, trySuccessRateChangeMessage)
         }
