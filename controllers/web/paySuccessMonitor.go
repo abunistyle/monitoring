@@ -146,7 +146,7 @@ func (p *PaySuccessMonitor) SetMonitor() {
     go func() {
         for {
             currentTime := time.Now()
-            if currentTime.Minute() == 0 || currentTime.Minute() == 30 || currentTime.Minute() > 0 {
+            if currentTime.Minute() == 0 || currentTime.Minute() == 30 {
                 p.SendNotice()
             }
             //p.SendNotice()
