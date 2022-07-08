@@ -150,7 +150,7 @@ func (p *PaySuccessMonitor) SetMonitor() {
                 p.SendNotice()
             }
             //p.SendNotice()
-            time.Sleep(30 * time.Second)
+            time.Sleep(50 * time.Second)
         }
     }()
 }
