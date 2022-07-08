@@ -6,8 +6,6 @@ import (
     "github.com/prometheus/client_golang/prometheus/promauto"
     "gorm.io/gorm"
     "monitoring/model/web/order"
-    "net/http"
-    "net/url"
     "strconv"
     "strings"
     "time"
@@ -145,7 +143,7 @@ func (p *PaySuccessMonitor) SetMonitor() {
     go func() {
         for {
             currentTime := time.Now()
-            if currentTime.Minute() == 0 || currentTime.Minute() == 30 {
+            if currentTime.Minute() == 0 || currentTime.Minute() == 30 || true {
                 p.SendNotice()
             }
             //p.SendNotice()
@@ -212,7 +210,7 @@ func (p *PaySuccessMonitor) SendNotice() {
             successRateChangeMessageList = append(successRateChangeMessageList, successRateChangeMessage)
         }
         if row.TrySuccessRateChange < -0.2 {
-            trySuccessRateChangeMessage := fmt.Sprintf("支付方式:%s,平台:%s,尝试支付成功率同比变化:%f", row.PaymentCode, row.Platform, row.SuccessRateChange)
+            trySuccessRateChangeMessage := fmt.Sprintf("支付方式:%s,平台:%s,尝试支付成功率同比变化:%f", row.PaymentCode, row.Platform, row.TrySuccessRateChange)
             trySuccessRateChangeMessageList = append(trySuccessRateChangeMessageList, trySuccessRateChangeMessage)
         }
     }
@@ -239,12 +237,12 @@ func (p *PaySuccessMonitor) SendNotice() {
 }
 
 func (p *PaySuccessMonitor) RunSendNotice(message string) {
-    go func() {
-        resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
-        fmt.Println(resp)
-    }()
+    //go func() {
+    //    resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
+    //    if err != nil {
+    //        fmt.Println(err)
+    //        return
+    //    }
+    //    fmt.Println(resp)
+    //}()
 }
