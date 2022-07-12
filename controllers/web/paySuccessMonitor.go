@@ -142,16 +142,16 @@ func (p *PaySuccessMonitor) SetMonitor() {
         }
     }()
 
-    go func() {
-        for {
-            currentTime := time.Now()
-            if currentTime.Minute() == 0 || currentTime.Minute() == 30 {
-                p.SendNotice()
-            }
-            //p.SendNotice()
-            time.Sleep(50 * time.Second)
-        }
-    }()
+    //go func() {
+    //    for {
+    //        currentTime := time.Now()
+    //        if currentTime.Minute() == 0 || currentTime.Minute() == 30 {
+    //            p.SendNotice()
+    //        }
+    //        //p.SendNotice()
+    //        time.Sleep(50 * time.Second)
+    //    }
+    //}()
 }
 
 //创建结构体及对应的指标信息
