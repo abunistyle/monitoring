@@ -44,7 +44,8 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
         return nil
     }
 
-    m, _ = time.ParseDuration("-72h")
+    //与上周同期数据比
+    m, _ = time.ParseDuration("-168h")
     endTime2 := endTime.Add(m)
     startTime2 := startTime.Add(m)
 
