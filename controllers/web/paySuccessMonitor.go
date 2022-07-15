@@ -6,6 +6,8 @@ import (
     "gorm.io/gorm"
     "math"
     "monitoring/model/web/order"
+    "net/http"
+    "net/url"
     "strconv"
     "strings"
     "time"
@@ -244,7 +246,7 @@ func (p *PaySuccessMonitor) SetMonitor() {
     go func() {
         for {
             currentTime := time.Now()
-            if currentTime.Minute() == 0 || currentTime.Minute() == 30 {
+            if currentTime.Minute() == 10 {
                 p.SendNotice()
             }
             p.SendNotice()
@@ -339,12 +341,12 @@ func (p *PaySuccessMonitor) SendNotice() {
 
 func (p *PaySuccessMonitor) RunSendNotice(message string) {
     message = "(测试中，请忽略)" + message
-    //go func() {
-    //    resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
-    //    if err != nil {
-    //        fmt.Println(err)
-    //        return
-    //    }
-    //    fmt.Println(resp)
-    //}()
+    go func() {
+        resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        fmt.Println(resp)
+    }()
 }
