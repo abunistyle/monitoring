@@ -270,7 +270,7 @@ func (p *PaySuccessMonitor) SetMonitor() {
             if currentTime.Minute() == 10 {
                 p.SendNotice()
             }
-            p.SendNotice()
+            //p.SendNotice()
             time.Sleep(50 * time.Second)
         }
     }()
