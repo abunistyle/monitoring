@@ -1,13 +1,13 @@
 package web
 
 import (
+    "encoding/json"
     "fmt"
     "github.com/prometheus/client_golang/prometheus"
+    "github.com/prometheus/client_golang/prometheus/promauto"
     "gorm.io/gorm"
     "math"
     "monitoring/model/web/order"
-    "net/http"
-    "net/url"
     "strconv"
     "strings"
     "time"
@@ -23,39 +23,51 @@ func (p *PaySuccessMonitor) Init() {
     rules["elavee|PC|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.8,
-        SuccessRateChange:       0.8,
+        //TrySuccessRateChange:    0.8,
+        //SuccessRateChange:       0.8,
+        TrySuccessRateChange: 0.9,
+        SuccessRateChange:    0.9,
     }
     rules["elavee|PC|paypal"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.8,
-        SuccessRateChange:       0.8,
+        //TrySuccessRateChange:    0.8,
+        //SuccessRateChange:       0.8,
+        TrySuccessRateChange: 0.9,
+        SuccessRateChange:    0.9,
     }
     rules["elavee|PC|other"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.6,
-        SuccessRateChange:       0.6,
+        //TrySuccessRateChange:    0.6,
+        //SuccessRateChange:       0.6,
+        TrySuccessRateChange: 0.7,
+        SuccessRateChange:    0.7,
     }
 
     rules["elavee|H5|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.6,
-        SuccessRateChange:       0.6,
+        //TrySuccessRateChange:    0.6,
+        //SuccessRateChange:       0.6,
+        TrySuccessRateChange: 0.7,
+        SuccessRateChange:    0.7,
     }
     rules["elavee|H5|paypal"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.8,
-        SuccessRateChange:       0.8,
+        //TrySuccessRateChange:    0.8,
+        //SuccessRateChange:       0.8,
+        TrySuccessRateChange: 0.9,
+        SuccessRateChange:    0.9,
     }
     rules["elavee|H5|other"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.6,
-        SuccessRateChange:       0.6,
+        //TrySuccessRateChange:    0.6,
+        //SuccessRateChange:       0.6,
+        TrySuccessRateChange: 0.7,
+        SuccessRateChange:    0.7,
     }
     p.Rules = rules
 }
@@ -83,7 +95,16 @@ func (p *PaySuccessMonitor) GetPaymentList(startTime time.Time, endTime time.Tim
 }
 
 func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int64, paymentCode string, platform string, startTime time.Time, endTime time.Time) order.PaySuccessRateInfo {
-    var result order.PaySuccessRateInfo
+    var result = order.PaySuccessRateInfo{
+        TrySuccessRateLastest10:      math.NaN(),
+        SuccessRateLastest10:         math.NaN(),
+        TrySuccessRateLastest100:     math.NaN(),
+        SuccessRateLastest100:        math.NaN(),
+        TrySuccessRateLastLastest100: math.NaN(),
+        SuccessRateLastLastest100:    math.NaN(),
+        TrySuccessRateChange:         math.NaN(),
+        SuccessRateChange:            math.NaN(),
+    }
     orderList := p.GetOrderData(projectName, paymentId, paymentCode, platform, 0, 200, startTime, endTime)
     if len(orderList) == 0 {
         return result
@@ -212,36 +233,36 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
 
 //创建结构体及对应的指标信息
 func (p *PaySuccessMonitor) SetMonitor() {
-    //trySuccessRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-    //    Name: "pay_success_try_success_rate",
-    //    Help: "尝试支付成功率",
-    //},
-    //    []string{"project_name", "payment_code", "platform"},
-    //)
-    //successRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-    //    Name: "pay_success_success_rate",
-    //    Help: "支付成功率",
-    //},
-    //    []string{"project_name", "payment_code", "platform"},
-    //)
-    //trySuccessRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-    //    Name: "pay_success_try_success_rate_change",
-    //    Help: "尝试支付成功率同比变化率",
-    //},
-    //    []string{"project_name", "payment_code", "platform"},
-    //)
-    //successRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-    //    Name: "pay_success_success_rate_change",
-    //    Help: "支付成功率同比变化率",
-    //},
-    //    []string{"project_name", "payment_code", "platform"},
-    //)
-    //go func() {
-    //    for {
-    //        p.RecordMetrics(trySuccessRateGaugeVec, successRateGaugeVec, trySuccessRateChangeGaugeVec, successRateChangeGaugeVec)
-    //        time.Sleep(600 * time.Second)
-    //    }
-    //}()
+    trySuccessRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_try_success_rate",
+        Help: "尝试支付成功率",
+    },
+        []string{"project_name", "payment_code", "platform"},
+    )
+    successRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_success_rate",
+        Help: "支付成功率",
+    },
+        []string{"project_name", "payment_code", "platform"},
+    )
+    trySuccessRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_try_success_rate_change",
+        Help: "尝试支付成功率同比占比",
+    },
+        []string{"project_name", "payment_code", "platform"},
+    )
+    successRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_success_rate_change",
+        Help: "支付成功率同比占比",
+    },
+        []string{"project_name", "payment_code", "platform"},
+    )
+    go func() {
+        for {
+            p.RecordMetrics(trySuccessRateGaugeVec, successRateGaugeVec, trySuccessRateChangeGaugeVec, successRateChangeGaugeVec)
+            time.Sleep(600 * time.Second)
+        }
+    }()
 
     go func() {
         for {
@@ -258,29 +279,41 @@ func (p *PaySuccessMonitor) SetMonitor() {
 //创建结构体及对应的指标信息
 func (p *PaySuccessMonitor) RecordMetrics(trySuccessRateGaugeVec *prometheus.GaugeVec, successRateGaugeVec *prometheus.GaugeVec, trySuccessRateChangeGaugeVec *prometheus.GaugeVec, successRateChangeGaugeVec *prometheus.GaugeVec) {
     monitorData := p.GetMonitorData()
-    fmt.Println(monitorData)
-    //for _, row := range monitorData {
-    //    trySuccessRateGaugeVec.With(prometheus.Labels{
-    //        "project_name": row.ProjectName,
-    //        "payment_code": row.PaymentCode,
-    //        "platform":     row.Platform,
-    //    }).Set(row.TrySuccessRateLastest100)
-    //    successRateGaugeVec.With(prometheus.Labels{
-    //        "project_name": row.ProjectName,
-    //        "payment_code": row.PaymentCode,
-    //        "platform":     row.Platform,
-    //    }).Set(row.SuccessRate)
-    //    trySuccessRateChangeGaugeVec.With(prometheus.Labels{
-    //        "project_name": row.ProjectName,
-    //        "payment_code": row.PaymentCode,
-    //        "platform":     row.Platform,
-    //    }).Set(row.TrySuccessRateChange)
-    //    successRateChangeGaugeVec.With(prometheus.Labels{
-    //        "project_name": row.ProjectName,
-    //        "payment_code": row.PaymentCode,
-    //        "platform":     row.Platform,
-    //    }).Set(row.SuccessRateChange)
-    //}
+    //fmt.Println(monitorData)
+    for _, row := range monitorData {
+        //bytes1, err := json.Marshal(&row)
+        //if err == nil {
+        //    fmt.Println("row: ", string(bytes1))
+        //}
+        if !math.IsNaN(row.TrySuccessRateLastest10) {
+            trySuccessRateGaugeVec.With(prometheus.Labels{
+                "project_name": row.ProjectName,
+                "payment_code": row.PaymentCode,
+                "platform":     row.Platform,
+            }).Set(row.TrySuccessRateLastest10)
+        }
+        if !math.IsNaN(row.SuccessRateLastest10) {
+            successRateGaugeVec.With(prometheus.Labels{
+                "project_name": row.ProjectName,
+                "payment_code": row.PaymentCode,
+                "platform":     row.Platform,
+            }).Set(row.SuccessRateLastest10)
+        }
+        if !math.IsNaN(row.TrySuccessRateChange) {
+            trySuccessRateChangeGaugeVec.With(prometheus.Labels{
+                "project_name": row.ProjectName,
+                "payment_code": row.PaymentCode,
+                "platform":     row.Platform,
+            }).Set(row.TrySuccessRateChange)
+        }
+        if !math.IsNaN(row.SuccessRateChange) {
+            successRateChangeGaugeVec.With(prometheus.Labels{
+                "project_name": row.ProjectName,
+                "payment_code": row.PaymentCode,
+                "platform":     row.Platform,
+            }).Set(row.SuccessRateChange)
+        }
+    }
 }
 
 func (p *PaySuccessMonitor) SendNotice() {
@@ -291,29 +324,29 @@ func (p *PaySuccessMonitor) SendNotice() {
     var successRateChangeMessageList []string
     var trySuccessRateChangeMessageList []string
     for _, row := range monitorData {
-        //bytes1, err := json.Marshal(&row)
-        //if err == nil {
-        //    fmt.Println("row: ", string(bytes1))
-        //}
         //fmt.Println(row)
         rule, exist := p.GetRule(row.ProjectName, row.PaymentCode, row.Platform)
         if !exist {
             continue
         }
-        if row.TrySuccessRateLastest10 != math.NaN() && row.TrySuccessRateLastest10 <= rule.TrySuccessRateLastest10 {
-            trySuccessRateMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,尝试支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.TrySuccessRateLastest10)
+        bytes1, err := json.Marshal(&row)
+        if err == nil {
+            fmt.Println("row: ", string(bytes1))
+        }
+        if !math.IsNaN(row.TrySuccessRateLastest10) && row.TrySuccessRateLastest10 <= rule.TrySuccessRateLastest10 {
+            trySuccessRateMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,近10单尝试支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.TrySuccessRateLastest10)
             trySuccessRateMessageList = append(trySuccessRateMessageList, trySuccessRateMessage)
         }
-        if row.SuccessRateLastest10 != math.NaN() && row.SuccessRateLastest10 <= rule.SuccessRateLastest10 {
-            successRateMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.SuccessRateLastest10)
+        if !math.IsNaN(row.SuccessRateLastest10) && row.SuccessRateLastest10 <= rule.SuccessRateLastest10 {
+            successRateMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,近10单支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.SuccessRateLastest10)
             successRateMessageList = append(successRateMessageList, successRateMessage)
         }
-        if row.TrySuccessRateChange != math.NaN() && row.TrySuccessRateChange < rule.TrySuccessRateChange {
-            trySuccessRateChangeMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,尝试支付成功率同比变化:%f", row.ProjectName, row.PaymentCode, row.Platform, row.TrySuccessRateChange)
+        if !math.IsNaN(row.TrySuccessRateChange) && row.TrySuccessRateChange < rule.TrySuccessRateChange {
+            trySuccessRateChangeMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,尝试支付成功率同比<%f:%f", row.ProjectName, row.PaymentCode, row.Platform, rule.TrySuccessRateChange, row.TrySuccessRateChange)
             trySuccessRateChangeMessageList = append(trySuccessRateChangeMessageList, trySuccessRateChangeMessage)
         }
-        if row.SuccessRateChange != math.NaN() && row.SuccessRateChange < rule.SuccessRateChange {
-            successRateChangeMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,支付成功率同比变化:%f", row.ProjectName, row.PaymentCode, row.Platform, row.SuccessRateChange)
+        if !math.IsNaN(row.SuccessRateChange) && row.SuccessRateChange < rule.SuccessRateChange {
+            successRateChangeMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,支付成功率同比<%f:%f", row.ProjectName, row.PaymentCode, row.Platform, rule.SuccessRateChange, row.SuccessRateChange)
             successRateChangeMessageList = append(successRateChangeMessageList, successRateChangeMessage)
         }
     }
@@ -341,12 +374,12 @@ func (p *PaySuccessMonitor) SendNotice() {
 
 func (p *PaySuccessMonitor) RunSendNotice(message string) {
     message = "(测试中，请忽略)" + message
-    go func() {
-        resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
-        fmt.Println(resp)
-    }()
+    //go func() {
+    //    resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
+    //    if err != nil {
+    //        fmt.Println(err)
+    //        return
+    //    }
+    //    fmt.Println(resp)
+    //}()
 }
