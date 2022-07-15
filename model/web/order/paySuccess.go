@@ -1,18 +1,67 @@
 package order
 
-type PaySuccess struct {
-    ProjectName    string  `json:"projectName"`
-    PaymentCode    string  `json:"paymentCode"`
-    Platform       string  `json:"platform"`
-    TrySuccessRate float64 `json:"trySuccessRate"`
-    SuccessRate    float64 `json:"successRate"`
-    SuccessCount   int64   `json:"successCount"`
-    TryCount       int64   `json:"tryCount"`
-    AllCount       int64   `json:"allCount"`
+import "time"
+
+type Payment struct {
+    ProjectName string `json:"projectName"`
+    PaymentCode string `json:"paymentCode"`
+    PaymentId   int64  `json:"paymentId"`
 }
 
+type PaySuccessOrder struct {
+    ProjectName   string    `json:"projectName"`
+    OrderId       int64     `json:"orderId"`
+    OrderSn       string    `json:"orderSn"`
+    PayStatus     int64     `json:"payStatus"`
+    PaymentId     int64     `json:"paymentId"`
+    PaymentCode   string    `json:"payment_code"`
+    OrderTime     time.Time `json:"order_time"`
+    PayTime       time.Time `json:"payTime"`
+    Platform      string    `json:"platform"`
+    PtId          int64     `json:"ptId"`
+    PtPaymentCode string    `json:"ptPaymentCode"`
+    TryCnt        int64     `json:"tryCnt"`
+}
+
+type PaySuccessRateInfo struct {
+    TrySuccessRateLastest10      float64 `json:"trySuccessRateLastest10"`
+    SuccessRateLastest10         float64 `json:"successRateLastest10"`
+    TrySuccessRateLastest100     float64 `json:"trySuccessRateLastest100"`
+    SuccessRateLastest100        float64 `json:"successRateLastest100"`
+    TrySuccessRateLastLastest100 float64 `json:"trySuccessRateLastLastest100"`
+    SuccessRateLastLastest100    float64 `json:"successRateLastLastest100"`
+    TrySuccessRateChange         float64 `json:"trySuccessRate"`
+    SuccessRateChange            float64 `json:"successRate"`
+}
+
+//type PaySuccess struct {
+//    ProjectName    string  `json:"projectName"`
+//    PaymentCode    string  `json:"paymentCode"`
+//    Platform       string  `json:"platform"`
+//    TrySuccessRate float64 `json:"trySuccessRate"`
+//    SuccessRate    float64 `json:"successRate"`
+//    SuccessCount   int64   `json:"successCount"`
+//    TryCount       int64   `json:"tryCount"`
+//    AllCount       int64   `json:"allCount"`
+//}
+
 type PaySuccessMonitor struct {
-    PaySuccess
-    TrySuccessRateChange float64 `json:"trySuccessRate"`
-    SuccessRateChange    float64 `json:"successRate"`
+    TrySuccessRateLastest10      float64 `json:"trySuccessRateLastest10"`
+    SuccessRateLastest10         float64 `json:"successRateLastest10"`
+    TrySuccessRateLastest100     float64 `json:"trySuccessRateLastest100"`
+    SuccessRateLastest100        float64 `json:"successRateLastest100"`
+    TrySuccessRateLastLastest100 float64 `json:"trySuccessRateLastLastest100"`
+    SuccessRateLastLastest100    float64 `json:"successRateLastLastest100"`
+    TrySuccessRateChange         float64 `json:"trySuccessRate"`
+    SuccessRateChange            float64 `json:"successRate"`
+    ProjectName                  string  `json:"projectName"`
+    PaymentCode                  string  `json:"paymentCode"`
+    Platform                     string  `json:"platform"`
+}
+
+type PaySuccessRule struct {
+    TrySuccessRateLastest10 float64 `json:"trySuccessRateLastest10"`
+    SuccessRateLastest10    float64 `json:"successRateLastest10"`
+    TrySuccessRateChange    float64 `json:"trySuccessRateChange"`
+    SuccessRateChange       float64 `json:"successRateChange"`
 }
