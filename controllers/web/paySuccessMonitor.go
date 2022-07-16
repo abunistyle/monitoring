@@ -25,51 +25,51 @@ func (p *PaySuccessMonitor) Init() {
     rules["elavee|PC|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        //TrySuccessRateChange:    0.8,
-        //SuccessRateChange:       0.8,
-        TrySuccessRateChange: 0.9,
-        SuccessRateChange:    0.9,
+        TrySuccessRateChange:    0.8,
+        SuccessRateChange:       0.8,
+        //TrySuccessRateChange: 0.9,
+        //SuccessRateChange:    0.9,
     }
     rules["elavee|PC|paypal"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        //TrySuccessRateChange:    0.8,
-        //SuccessRateChange:       0.8,
-        TrySuccessRateChange: 0.9,
-        SuccessRateChange:    0.9,
+        TrySuccessRateChange:    0.8,
+        SuccessRateChange:       0.8,
+        //TrySuccessRateChange: 0.9,
+        //SuccessRateChange:    0.9,
     }
     rules["elavee|PC|other"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        //TrySuccessRateChange:    0.6,
-        //SuccessRateChange:       0.6,
-        TrySuccessRateChange: 0.7,
-        SuccessRateChange:    0.7,
+        TrySuccessRateChange:    0.6,
+        SuccessRateChange:       0.6,
+        //TrySuccessRateChange: 0.7,
+        //SuccessRateChange:    0.7,
     }
 
     rules["elavee|H5|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        //TrySuccessRateChange:    0.6,
-        //SuccessRateChange:       0.6,
-        TrySuccessRateChange: 0.7,
-        SuccessRateChange:    0.7,
+        TrySuccessRateChange:    0.6,
+        SuccessRateChange:       0.6,
+        //TrySuccessRateChange: 0.7,
+        //SuccessRateChange:    0.7,
     }
     rules["elavee|H5|paypal"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        //TrySuccessRateChange:    0.8,
-        //SuccessRateChange:       0.8,
-        TrySuccessRateChange: 0.9,
-        SuccessRateChange:    0.9,
+        TrySuccessRateChange:    0.8,
+        SuccessRateChange:       0.8,
+        //TrySuccessRateChange: 0.9,
+        //SuccessRateChange:    0.9,
     }
     rules["elavee|H5|other"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        //TrySuccessRateChange:    0.6,
-        //SuccessRateChange:       0.6,
-        TrySuccessRateChange: 0.7,
-        SuccessRateChange:    0.7,
+        TrySuccessRateChange:    0.6,
+        SuccessRateChange:       0.6,
+        //TrySuccessRateChange: 0.7,
+        //SuccessRateChange:    0.7,
     }
     p.Rules = rules
 }
