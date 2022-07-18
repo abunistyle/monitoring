@@ -16,8 +16,9 @@ import (
 )
 
 type PaySuccessMonitor struct {
-    DB    *gorm.DB
-    Rules map[string]order.PaySuccessRule
+    DB           *gorm.DB
+    Rules        map[string]order.PaySuccessRule
+    SkipPayments map[string]bool
 }
 
 func (p *PaySuccessMonitor) Init() {
@@ -72,6 +73,18 @@ func (p *PaySuccessMonitor) Init() {
         //SuccessRateChange:    0.7,
     }
     p.Rules = rules
+    p.SkipPayments = map[string]bool{
+        "elavee|H5|checkout#sofort": true,
+    }
+}
+
+func (p *PaySuccessMonitor) IsSkip(projectName string, paymentCode string, platform string) bool {
+    key := fmt.Sprintf("%s|%s|%s", projectName, platform, strings.ToLower(paymentCode))
+    if _, exist := p.SkipPayments[key]; exist {
+        return true
+    } else {
+        return false
+    }
 }
 
 func (p *PaySuccessMonitor) GetRule(projectName string, paymentCode string, platform string) (order.PaySuccessRule, bool) {
@@ -327,6 +340,9 @@ func (p *PaySuccessMonitor) SendNotice() {
     var trySuccessRateChangeMessageList []string
     for _, row := range monitorData {
         //fmt.Println(row)
+        if p.IsSkip(row.ProjectName, row.PaymentCode, row.Platform) {
+            continue
+        }
         rule, exist := p.GetRule(row.ProjectName, row.PaymentCode, row.Platform)
         if !exist {
             continue
