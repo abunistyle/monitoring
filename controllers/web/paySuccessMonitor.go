@@ -186,6 +186,8 @@ func (p *PaySuccessMonitor) Init() {
     },
         []string{"project_name", "payment_code", "platform"},
     )
+
+    p.RefreshMonitorData()
 }
 
 func (p *PaySuccessMonitor) IsSkip(projectName string, paymentCode string, platform string) bool {
