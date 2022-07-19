@@ -157,7 +157,7 @@ func (p *PaySuccessMonitor) GetPaymentList(startTime time.Time, endTime time.Tim
     var result []order.Payment
     startTimeStr := startTime.Format("2006-01-02 15:04:05")
     endTimeStr := endTime.Format("2006-01-02 15:04:05")
-    sql := fmt.Sprintf("SELECT\n    oi.project_name,\n    p.payment_id,\n    p.payment_code\nFROM order_info oi\n     LEFT JOIN payment p on p.payment_id = oi.payment_id\n     LEFT JOIN user_agent ua ON ua.user_agent_id = oi.user_agent_id\n     LEFT JOIN user_agent_analysis uaa ON uaa.user_agent_id = oi.user_agent_id\nWHERE oi.order_time BETWEEN '%s' AND '%s'\n  AND oi.email NOT LIKE '%%@tetx.com'\n  AND oi.email NOT LIKE '%%@i9i8.com'\n  AND oi.email NOT LIKE '%%@qq.com'\n  AND oi.email NOT LIKE '%%@163.com'\n  AND oi.email NOT LIKE '%%@jjshouse.com'\n  AND oi.email NOT LIKE '%%@jenjenhouse.com'\n  AND oi.email NOT LIKE '%%@abunistyle.com'\nGROUP BY oi.project_name,\n         oi.payment_id;", startTimeStr, endTimeStr)
+    sql := fmt.Sprintf("SELECT\n    lower(oi.project_name) AS project_name,\n    p.payment_id,\n    p.payment_code,\n    CASE\n        WHEN POSITION('api.' IN oi.from_domain) = 0 THEN 'PC'\n        WHEN POSITION('lq-App' IN ua.agent_type) > 0 THEN 'APP'\n        ELSE 'H5'\n\tEND AS platform\nFROM order_info oi\nLEFT JOIN payment p on p.payment_id = oi.payment_id\nLEFT JOIN user_agent ua ON ua.user_agent_id = oi.user_agent_id\nWHERE oi.order_time BETWEEN '%s' AND '%s'\n  AND oi.email NOT LIKE '%@tetx.com'\n  AND oi.email NOT LIKE '%@i9i8.com'\n  AND oi.email NOT LIKE '%@qq.com'\n  AND oi.email NOT LIKE '%@163.com'\n  AND oi.email NOT LIKE '%@jjshouse.com'\n  AND oi.email NOT LIKE '%@jenjenhouse.com'\n  AND oi.email NOT LIKE '%@abunistyle.com'\nGROUP BY oi.project_name,oi.payment_id,platform;", startTimeStr, endTimeStr)
     p.DB.Raw(sql).Scan(&result)
     return result
 }
@@ -272,27 +272,23 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
     startTime := endTime.Add(m)
 
     var result []order.PaySuccessMonitor
-    for _, projectName := range p.ProjectNames {
-        for _, payment := range paymentList {
-            for _, platform := range p.Platforms {
-                statisticsData := p.GetStatisticsData(projectName, payment.PaymentId, payment.PaymentCode, platform, startTime, endTime)
-                //fmt.Println(statisticsData)
-                resultRow := order.PaySuccessMonitor{
-                    TrySuccessRateLastest10:      statisticsData.TrySuccessRateLastest10,
-                    SuccessRateLastest10:         statisticsData.SuccessRateLastest10,
-                    TrySuccessRateLastest100:     statisticsData.TrySuccessRateLastest100,
-                    SuccessRateLastest100:        statisticsData.SuccessRateLastest100,
-                    TrySuccessRateLastLastest100: statisticsData.TrySuccessRateLastLastest100,
-                    SuccessRateLastLastest100:    statisticsData.SuccessRateLastLastest100,
-                    TrySuccessRateChange:         statisticsData.TrySuccessRateChange,
-                    SuccessRateChange:            statisticsData.SuccessRateChange,
-                    ProjectName:                  projectName,
-                    PaymentCode:                  payment.PaymentCode,
-                    Platform:                     platform,
-                }
-                result = append(result, resultRow)
-            }
+    for _, payment := range paymentList {
+        statisticsData := p.GetStatisticsData(payment.ProjectName, payment.PaymentId, payment.PaymentCode, payment.Platform, startTime, endTime)
+        //fmt.Println(statisticsData)
+        resultRow := order.PaySuccessMonitor{
+            TrySuccessRateLastest10:      statisticsData.TrySuccessRateLastest10,
+            SuccessRateLastest10:         statisticsData.SuccessRateLastest10,
+            TrySuccessRateLastest100:     statisticsData.TrySuccessRateLastest100,
+            SuccessRateLastest100:        statisticsData.SuccessRateLastest100,
+            TrySuccessRateLastLastest100: statisticsData.TrySuccessRateLastLastest100,
+            SuccessRateLastLastest100:    statisticsData.SuccessRateLastLastest100,
+            TrySuccessRateChange:         statisticsData.TrySuccessRateChange,
+            SuccessRateChange:            statisticsData.SuccessRateChange,
+            ProjectName:                  payment.ProjectName,
+            PaymentCode:                  payment.PaymentCode,
+            Platform:                     payment.Platform,
         }
+        result = append(result, resultRow)
     }
     return result
 }

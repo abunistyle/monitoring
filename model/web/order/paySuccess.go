@@ -6,6 +6,7 @@ type Payment struct {
     ProjectName string `json:"projectName"`
     PaymentCode string `json:"paymentCode"`
     PaymentId   int64  `json:"paymentId"`
+    Platform    string `json:"platform"`
 }
 
 type PaySuccessOrder struct {
