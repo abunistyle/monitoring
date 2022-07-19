@@ -21,6 +21,7 @@ func main() {
     configFileName := flag.String("c", "./config.yaml", "请输入配置文件路径")
     moduleName := flag.String("m", "web", "请输入模块名，比如：web、fdweb")
     debug := flag.Bool("debug", false, "是否debug，比如：true、false")
+    paramPort := flag.Uint64("p", 0, "请输入端口号，比如：8080")
     flag.Parse()
     file, err := ioutil.ReadFile(*configFileName)
     if err != nil {
@@ -36,7 +37,14 @@ func main() {
         os.Exit(1)
         return
     }
-    port := flag.Uint64("p", myconfig.Application.Port, "请输入端口号，比如：8080")
+
+    port := (func() uint64 {
+        if *paramPort > 0 {
+            return *paramPort
+        } else {
+            return myconfig.Application.Port
+        }
+    })()
     initialize.InitDBList(&myconfig)
     //router := initialize.Routers()
     //router.Run()
@@ -53,8 +61,7 @@ func main() {
         err := errors.New(fmt.Sprintf("module:%s, db not exist!", *moduleName))
         panic(err)
     }
-    fmt.Println(myconfig.Application.Port)
-    fmt.Println(fmt.Sprintf("application running on port %d", myconfig.Application.Port))
+    fmt.Println(fmt.Sprintf("application running on port %d", port))
     var projectNames []string
     var platforms []string
     var useTestMessage bool
@@ -80,7 +87,7 @@ func main() {
     myCron.Start()
 
     http.Handle("/metrics/web/paySuccess", promhttp.Handler())
-    err = http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+    err = http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
     if err != nil {
         return
     }
