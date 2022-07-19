@@ -18,12 +18,14 @@ import (
 func main() {
     rootPath := flag.String("r", "./", "请输入程序根路径")
     configFileName := flag.String("c", "./config.yaml", "请输入配置文件路径")
+    moduleName := flag.String("m", "web", "请输入模块名，比如：web、fdweb")
+    debug := flag.Bool("debug", false, "是否debug，比如：true、false")
     flag.Parse()
     file, err := ioutil.ReadFile(*configFileName)
     if err != nil {
         fmt.Print(err)
     }
-    fmt.Println(fmt.Sprintf("root path: %s, config file name: %s", *rootPath, *configFileName))
+    fmt.Println(fmt.Sprintf("root path: %s, config file name: %s, module name: %s, debug: %t", *rootPath, *configFileName, *moduleName, *debug))
 
     //yaml文件内容影射到结构体中
     var myconfig config.Config
@@ -33,6 +35,7 @@ func main() {
         os.Exit(1)
         return
     }
+    port := flag.Uint64("p", myconfig.Application.Port, "请输入端口号，比如：8080")
     initialize.InitDBList(&myconfig)
     //router := initialize.Routers()
     //router.Run()
@@ -44,16 +47,28 @@ func main() {
     //http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{Registry: registry}))
 
     //prom)etheus.MustRegister(web.NewPaySuccessMonitor())
-    orderDB, dbExist := global.GetDBByName("web", "order")
+    orderDB, dbExist := global.GetDBByName(*moduleName, "")
     if !dbExist {
-        err := errors.New(fmt.Sprintf("module:%s, group:%s, db not exist!", "web", "order"))
+        err := errors.New(fmt.Sprintf("module:%s, db not exist!", *moduleName))
         panic(err)
     }
     fmt.Println(myconfig.Application.Port)
     fmt.Println(fmt.Sprintf("application running on port %d", myconfig.Application.Port))
-    paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB}
+    var projectNames []string
+    var platforms []string
+    var useTestMessage bool
+    if *moduleName == "fdweb" {
+        projectNames = []string{"floryday", "airydress"}
+        platforms = []string{"PC", "H5", "APP"}
+        useTestMessage = true
+    } else {
+        projectNames = []string{"elavee"}
+        platforms = []string{"PC", "H5"}
+        useTestMessage = false
+    }
+    paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB, ProjectNames: projectNames, Platforms: platforms, Debug: *debug, UseTestMessage: useTestMessage}
     paySuccessMonitor.Init()
     paySuccessMonitor.SetMonitor()
     http.Handle("/metrics/web/paySuccess", promhttp.Handler())
-    http.ListenAndServe(fmt.Sprintf(":%d", myconfig.Application.Port), nil)
+    http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 }

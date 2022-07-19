@@ -3,15 +3,25 @@ application:
 modules:
   web:
     db:
-      host: 127.0.0.1
-      port: 34060
+      host: 16.163.46.134
+      port: 6033
       dbName: vbridal
-      username: jjs0517cmscronjob
-      password: vbridalcommonpass
+      username: web_ue1
+      password: yv4wkse5eMYl
       config: charset=utf8mb4&parseTime=True&loc=America%2FLos_Angeles
       maxOpenConns: 20
       maxIdleConns: 5
-    groupMap:
-      order:
-        db:
-          dbName: vbridal
+#    groupMap:
+#      order:
+#        db:
+#          dbName: vbridal
+  fdweb:
+    db:
+      host: 16.163.46.134
+      port: 6033
+      dbName: vbridal
+      username: fd_fdrds_ue1
+      password: xw4BePCuticz
+      config: charset=utf8mb4&parseTime=True&loc=America%2FLos_Angeles
+      maxOpenConns: 20
+      maxIdleConns: 5

@@ -16,9 +16,13 @@ import (
 )
 
 type PaySuccessMonitor struct {
-    DB           *gorm.DB
-    Rules        map[string]order.PaySuccessRule
-    SkipPayments map[string]bool
+    DB             *gorm.DB
+    ProjectNames   []string
+    Platforms      []string
+    Debug          bool
+    UseTestMessage bool
+    Rules          map[string]order.PaySuccessRule
+    SkipPayments   map[string]bool
 }
 
 func (p *PaySuccessMonitor) Init() {
@@ -65,6 +69,55 @@ func (p *PaySuccessMonitor) Init() {
         //SuccessRateChange:    0.9,
     }
     rules["elavee|H5|other"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.6,
+        SuccessRateChange:       0.6,
+        //TrySuccessRateChange: 0.7,
+        //SuccessRateChange:    0.7,
+    }
+    rules["floryday|PC|checkout"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.8,
+        SuccessRateChange:       0.8,
+        //TrySuccessRateChange: 0.9,
+        //SuccessRateChange:    0.9,
+    }
+    rules["floryday|PC|paypal"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.8,
+        SuccessRateChange:       0.8,
+        //TrySuccessRateChange: 0.9,
+        //SuccessRateChange:    0.9,
+    }
+    rules["floryday|PC|other"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.6,
+        SuccessRateChange:       0.6,
+        //TrySuccessRateChange: 0.7,
+        //SuccessRateChange:    0.7,
+    }
+
+    rules["floryday|H5|checkout"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.6,
+        SuccessRateChange:       0.6,
+        //TrySuccessRateChange: 0.7,
+        //SuccessRateChange:    0.7,
+    }
+    rules["floryday|H5|paypal"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.8,
+        SuccessRateChange:       0.8,
+        //TrySuccessRateChange: 0.9,
+        //SuccessRateChange:    0.9,
+    }
+    rules["floryday|H5|other"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
         TrySuccessRateChange:    0.6,
@@ -219,11 +272,9 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
     startTime := endTime.Add(m)
 
     var result []order.PaySuccessMonitor
-    var projectNameList = []string{"elavee"}
-    var platformList = []string{"PC", "H5", "APP"}
-    for _, projectName := range projectNameList {
+    for _, projectName := range p.ProjectNames {
         for _, payment := range paymentList {
-            for _, platform := range platformList {
+            for _, platform := range p.Platforms {
                 statisticsData := p.GetStatisticsData(projectName, payment.PaymentId, payment.PaymentCode, platform, startTime, endTime)
                 //fmt.Println(statisticsData)
                 resultRow := order.PaySuccessMonitor{
@@ -285,7 +336,9 @@ func (p *PaySuccessMonitor) SetMonitor() {
             if currentTime.Minute() == 10 {
                 p.SendNotice()
             }
-            //p.SendNotice()
+            if p.Debug {
+                p.SendNotice()
+            }
             time.Sleep(50 * time.Second)
         }
     }()
@@ -391,7 +444,12 @@ func (p *PaySuccessMonitor) SendNotice() {
 }
 
 func (p *PaySuccessMonitor) RunSendNotice(message string) {
-    message = "(测试中，请忽略)" + message
+    if p.Debug {
+        return
+    }
+    if p.UseTestMessage {
+        message = "(测试中，请忽略)" + message
+    }
     go func() {
         resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
         if err != nil {

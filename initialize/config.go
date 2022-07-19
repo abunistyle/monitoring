@@ -60,6 +60,19 @@ func getDBConfigList(myconfig *config.Config) (map[string]string, map[string]con
     dbConfigIndexMap := make(map[string]string)
     dbConfigMap := make(map[string]config.Db)
     for moduleName, module := range myconfig.ModuleMap {
+        //默认DB
+        dbConfig, err := getDBConfig(myconfig, moduleName, "")
+        if err != nil {
+            fmt.Println(err.Error())
+        } else {
+            key1 := utils.GenDbIndexKey(moduleName, "")
+            key2 := utils.MD5(fmt.Sprintf("%s|%d|%s|%s|%s", dbConfig.Host, dbConfig.Port, dbConfig.DbName, dbConfig.Config, dbConfig.Username))
+            _, key2Exist := dbConfigMap[key2]
+            if !key2Exist {
+                dbConfigMap[key2] = dbConfig
+            }
+            dbConfigIndexMap[key1] = key2
+        }
         for groupName := range module.GroupMap {
             dbConfig, err := getDBConfig(myconfig, moduleName, groupName)
             if err != nil {
@@ -67,7 +80,7 @@ func getDBConfigList(myconfig *config.Config) (map[string]string, map[string]con
                 continue
             }
             key1 := utils.GenDbIndexKey(moduleName, groupName)
-            key2 := utils.MD5(fmt.Sprintf("%s|%d|%s|%s", dbConfig.Host, dbConfig.Port, dbConfig.DbName, dbConfig.Config))
+            key2 := utils.MD5(fmt.Sprintf("%s|%d|%s|%s", dbConfig.Host, dbConfig.Port, dbConfig.DbName, dbConfig.Config, dbConfig.Username))
             _, key2Exist := dbConfigMap[key2]
             if !key2Exist {
                 dbConfigMap[key2] = dbConfig
