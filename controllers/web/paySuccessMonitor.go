@@ -4,7 +4,6 @@ import (
     "encoding/json"
     "fmt"
     "github.com/prometheus/client_golang/prometheus"
-    "github.com/prometheus/client_golang/prometheus/promauto"
     "gorm.io/gorm"
     "math"
     "monitoring/model/web/order"
@@ -12,6 +11,7 @@ import (
     "net/url"
     "strconv"
     "strings"
+    "sync"
     "time"
 )
 
@@ -76,54 +76,79 @@ func (p *PaySuccessMonitor) Init() {
         //TrySuccessRateChange: 0.7,
         //SuccessRateChange:    0.7,
     }
+
     rules["floryday|PC|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
         TrySuccessRateChange:    0.8,
         SuccessRateChange:       0.8,
-        //TrySuccessRateChange: 0.9,
-        //SuccessRateChange:    0.9,
     }
     rules["floryday|PC|paypal"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
         TrySuccessRateChange:    0.8,
         SuccessRateChange:       0.8,
-        //TrySuccessRateChange: 0.9,
-        //SuccessRateChange:    0.9,
     }
     rules["floryday|PC|other"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
         TrySuccessRateChange:    0.6,
         SuccessRateChange:       0.6,
-        //TrySuccessRateChange: 0.7,
-        //SuccessRateChange:    0.7,
     }
-
     rules["floryday|H5|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
         TrySuccessRateChange:    0.6,
         SuccessRateChange:       0.6,
-        //TrySuccessRateChange: 0.7,
-        //SuccessRateChange:    0.7,
     }
     rules["floryday|H5|paypal"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
         TrySuccessRateChange:    0.8,
         SuccessRateChange:       0.8,
-        //TrySuccessRateChange: 0.9,
-        //SuccessRateChange:    0.9,
     }
     rules["floryday|H5|other"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
         TrySuccessRateChange:    0.6,
         SuccessRateChange:       0.6,
-        //TrySuccessRateChange: 0.7,
-        //SuccessRateChange:    0.7,
+    }
+
+    rules["airydress|PC|checkout"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.8,
+        SuccessRateChange:       0.8,
+    }
+    rules["airydress|PC|paypal"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.8,
+        SuccessRateChange:       0.8,
+    }
+    rules["airydress|PC|other"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.6,
+        SuccessRateChange:       0.6,
+    }
+    rules["airydress|H5|checkout"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.6,
+        SuccessRateChange:       0.6,
+    }
+    rules["airydress|H5|paypal"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.8,
+        SuccessRateChange:       0.8,
+    }
+    rules["airydress|H5|other"] = order.PaySuccessRule{
+        TrySuccessRateLastest10: 0,
+        SuccessRateLastest10:    0,
+        TrySuccessRateChange:    0.6,
+        SuccessRateChange:       0.6,
     }
     p.Rules = rules
     p.SkipPayments = map[string]bool{
@@ -271,60 +296,68 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
     m, _ = time.ParseDuration("-2160h") //90 day
     startTime := endTime.Add(m)
 
+    var waitGroup sync.WaitGroup
     var result []order.PaySuccessMonitor
     for _, payment := range paymentList {
-        statisticsData := p.GetStatisticsData(payment.ProjectName, payment.PaymentId, payment.PaymentCode, payment.Platform, startTime, endTime)
-        //fmt.Println(statisticsData)
-        resultRow := order.PaySuccessMonitor{
-            TrySuccessRateLastest10:      statisticsData.TrySuccessRateLastest10,
-            SuccessRateLastest10:         statisticsData.SuccessRateLastest10,
-            TrySuccessRateLastest100:     statisticsData.TrySuccessRateLastest100,
-            SuccessRateLastest100:        statisticsData.SuccessRateLastest100,
-            TrySuccessRateLastLastest100: statisticsData.TrySuccessRateLastLastest100,
-            SuccessRateLastLastest100:    statisticsData.SuccessRateLastLastest100,
-            TrySuccessRateChange:         statisticsData.TrySuccessRateChange,
-            SuccessRateChange:            statisticsData.SuccessRateChange,
-            ProjectName:                  payment.ProjectName,
-            PaymentCode:                  payment.PaymentCode,
-            Platform:                     payment.Platform,
-        }
-        result = append(result, resultRow)
+        waitGroup.Add(1)
+        payment := payment
+        go func() {
+            statisticsData := p.GetStatisticsData(payment.ProjectName, payment.PaymentId, payment.PaymentCode, payment.Platform, startTime, endTime)
+            //fmt.Println(statisticsData)
+            resultRow := order.PaySuccessMonitor{
+                TrySuccessRateLastest10:      statisticsData.TrySuccessRateLastest10,
+                SuccessRateLastest10:         statisticsData.SuccessRateLastest10,
+                TrySuccessRateLastest100:     statisticsData.TrySuccessRateLastest100,
+                SuccessRateLastest100:        statisticsData.SuccessRateLastest100,
+                TrySuccessRateLastLastest100: statisticsData.TrySuccessRateLastLastest100,
+                SuccessRateLastLastest100:    statisticsData.SuccessRateLastLastest100,
+                TrySuccessRateChange:         statisticsData.TrySuccessRateChange,
+                SuccessRateChange:            statisticsData.SuccessRateChange,
+                ProjectName:                  payment.ProjectName,
+                PaymentCode:                  payment.PaymentCode,
+                Platform:                     payment.Platform,
+            }
+            result = append(result, resultRow)
+            waitGroup.Done()
+        }()
     }
+    waitGroup.Wait()
+    fmt.Println(fmt.Sprintf("result:%d", len(result)))
     return result
 }
 
 //创建结构体及对应的指标信息
 func (p *PaySuccessMonitor) SetMonitor() {
-    trySuccessRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-        Name: "pay_success_try_success_rate",
-        Help: "尝试支付成功率",
-    },
-        []string{"project_name", "payment_code", "platform"},
-    )
-    successRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-        Name: "pay_success_success_rate",
-        Help: "支付成功率",
-    },
-        []string{"project_name", "payment_code", "platform"},
-    )
-    trySuccessRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-        Name: "pay_success_try_success_rate_change",
-        Help: "尝试支付成功率同比占比",
-    },
-        []string{"project_name", "payment_code", "platform"},
-    )
-    successRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-        Name: "pay_success_success_rate_change",
-        Help: "支付成功率同比占比",
-    },
-        []string{"project_name", "payment_code", "platform"},
-    )
-    go func() {
-        for {
-            p.RecordMetrics(trySuccessRateGaugeVec, successRateGaugeVec, trySuccessRateChangeGaugeVec, successRateChangeGaugeVec)
-            time.Sleep(600 * time.Second)
-        }
-    }()
+    //trySuccessRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+    //    Name: "pay_success_try_success_rate",
+    //    Help: "尝试支付成功率",
+    //},
+    //    []string{"project_name", "payment_code", "platform"},
+    //)
+    //successRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+    //    Name: "pay_success_success_rate",
+    //    Help: "支付成功率",
+    //},
+    //    []string{"project_name", "payment_code", "platform"},
+    //)
+    //trySuccessRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+    //    Name: "pay_success_try_success_rate_change",
+    //    Help: "尝试支付成功率同比占比",
+    //},
+    //    []string{"project_name", "payment_code", "platform"},
+    //)
+    //successRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
+    //    Name: "pay_success_success_rate_change",
+    //    Help: "支付成功率同比占比",
+    //},
+    //    []string{"project_name", "payment_code", "platform"},
+    //)
+    //go func() {
+    //    for {
+    //        p.RecordMetrics(trySuccessRateGaugeVec, successRateGaugeVec, trySuccessRateChangeGaugeVec, successRateChangeGaugeVec)
+    //        time.Sleep(600 * time.Second)
+    //    }
+    //}()
 
     go func() {
         for {
