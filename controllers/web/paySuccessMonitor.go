@@ -188,6 +188,7 @@ func (p *PaySuccessMonitor) Init() {
     )
 
     p.RefreshMonitorData()
+    p.RecordMetrics(p.TrySuccessRateGaugeVec, p.SuccessRateGaugeVec, p.TrySuccessRateChangeGaugeVec, p.SuccessRateChangeGaugeVec)
 }
 
 func (p *PaySuccessMonitor) IsSkip(projectName string, paymentCode string, platform string) bool {
