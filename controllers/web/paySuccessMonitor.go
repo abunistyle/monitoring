@@ -17,14 +17,19 @@ import (
 )
 
 type PaySuccessMonitor struct {
-    DB             *gorm.DB
-    ProjectNames   []string
-    Platforms      []string
-    Debug          bool
-    UseTestMessage bool
-    Rules          map[string]order.PaySuccessRule
-    SkipPayments   map[string]bool
-    MonitorData    []order.PaySuccessMonitor
+    DB                           *gorm.DB
+    ProjectNames                 []string
+    Platforms                    []string
+    Debug                        bool
+    UseTestMessage               bool
+    Rules                        map[string]order.PaySuccessRule
+    SkipPayments                 map[string]bool
+    TrySuccessRateGaugeVec       *prometheus.GaugeVec
+    SuccessRateGaugeVec          *prometheus.GaugeVec
+    TrySuccessRateChangeGaugeVec *prometheus.GaugeVec
+    SuccessRateChangeGaugeVec    *prometheus.GaugeVec
+
+    MonitorData []order.PaySuccessMonitor
 }
 
 func (p *PaySuccessMonitor) Init() {
@@ -156,6 +161,31 @@ func (p *PaySuccessMonitor) Init() {
     p.SkipPayments = map[string]bool{
         "elavee|H5|checkout#sofort": true,
     }
+
+    p.TrySuccessRateGaugeVec = promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_try_success_rate",
+        Help: "尝试支付成功率",
+    },
+        []string{"project_name", "payment_code", "platform"},
+    )
+    p.SuccessRateGaugeVec = promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_success_rate",
+        Help: "支付成功率",
+    },
+        []string{"project_name", "payment_code", "platform"},
+    )
+    p.TrySuccessRateChangeGaugeVec = promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_try_success_rate_change",
+        Help: "尝试支付成功率同比占比",
+    },
+        []string{"project_name", "payment_code", "platform"},
+    )
+    p.SuccessRateChangeGaugeVec = promauto.NewGaugeVec(prometheus.GaugeOpts{
+        Name: "pay_success_success_rate_change",
+        Help: "支付成功率同比占比",
+    },
+        []string{"project_name", "payment_code", "platform"},
+    )
 }
 
 func (p *PaySuccessMonitor) IsSkip(projectName string, paymentCode string, platform string) bool {
@@ -333,48 +363,10 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
 }
 
 //创建结构体及对应的指标信息
-func (p *PaySuccessMonitor) SetMonitor() {
-    trySuccessRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-        Name: "pay_success_try_success_rate",
-        Help: "尝试支付成功率",
-    },
-        []string{"project_name", "payment_code", "platform"},
-    )
-    successRateGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-        Name: "pay_success_success_rate",
-        Help: "支付成功率",
-    },
-        []string{"project_name", "payment_code", "platform"},
-    )
-    trySuccessRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-        Name: "pay_success_try_success_rate_change",
-        Help: "尝试支付成功率同比占比",
-    },
-        []string{"project_name", "payment_code", "platform"},
-    )
-    successRateChangeGaugeVec := promauto.NewGaugeVec(prometheus.GaugeOpts{
-        Name: "pay_success_success_rate_change",
-        Help: "支付成功率同比占比",
-    },
-        []string{"project_name", "payment_code", "platform"},
-    )
-
-    go func() {
-        if p.Debug {
-            p.RefreshMonitorData()
-            p.RecordMetrics(trySuccessRateGaugeVec, successRateGaugeVec, trySuccessRateChangeGaugeVec, successRateChangeGaugeVec)
-            p.SendNotice()
-        }
-        for {
-            currentTime := time.Now()
-            if currentTime.Minute() == 10 {
-                p.RefreshMonitorData()
-                p.RecordMetrics(trySuccessRateGaugeVec, successRateGaugeVec, trySuccessRateChangeGaugeVec, successRateChangeGaugeVec)
-                p.SendNotice()
-            }
-            time.Sleep(50 * time.Second)
-        }
-    }()
+func (p *PaySuccessMonitor) RunMonitor() {
+    p.RefreshMonitorData()
+    p.RecordMetrics(p.TrySuccessRateGaugeVec, p.SuccessRateGaugeVec, p.TrySuccessRateChangeGaugeVec, p.SuccessRateChangeGaugeVec)
+    p.SendNotice()
 }
 
 //创建结构体及对应的指标信息

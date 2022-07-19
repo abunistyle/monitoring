@@ -5,6 +5,7 @@ import (
     "fmt"
     "github.com/pkg/errors"
     "github.com/prometheus/client_golang/prometheus/promhttp"
+    "github.com/robfig/cron/v3"
     "gopkg.in/yaml.v2"
     "io/ioutil"
     "monitoring/config"
@@ -68,7 +69,19 @@ func main() {
     }
     paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB, ProjectNames: projectNames, Platforms: platforms, Debug: *debug, UseTestMessage: useTestMessage}
     paySuccessMonitor.Init()
-    paySuccessMonitor.SetMonitor()
+    if *debug {
+        paySuccessMonitor.RunMonitor()
+    }
+
+    myCron := cron.New()
+    _, _ = myCron.AddFunc("10 * * * *", func() {
+        paySuccessMonitor.RunMonitor()
+    })
+    myCron.Start()
+
     http.Handle("/metrics/web/paySuccess", promhttp.Handler())
-    http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+    err = http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+    if err != nil {
+        return
+    }
 }
