@@ -124,8 +124,8 @@ func (p *PaySuccessMonitor) Init() {
     rules["airydress|PC|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.8,
-        SuccessRateChange:       0.8,
+        TrySuccessRateChange:    0.75,
+        SuccessRateChange:       0.75,
     }
     rules["airydress|PC|paypal"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
