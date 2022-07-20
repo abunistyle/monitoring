@@ -20,7 +20,7 @@ modules:
       host: 10.100.4.154
       port: 6033
       dbName: vbridal
-      username: webrds_ue1
+      username: fd_fdwebrds_ue1
       password: xw4BePCuticz
       config: charset=utf8mb4&parseTime=True&loc=America%2FLos_Angeles
       maxOpenConns: 20
