@@ -161,6 +161,7 @@ func (p *PaySuccessMonitor) Init() {
     p.SkipPayments = map[string]bool{
         "elavee|H5|checkout#sofort":         true,
         "floryday|H5|wire_transfer_vbridal": true,
+        "airydress|H5|dlocal":               true,
     }
 
     p.TrySuccessRateGaugeVec = promauto.NewGaugeVec(prometheus.GaugeOpts{
