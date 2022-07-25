@@ -1,6 +1,8 @@
 package order
 
-import "time"
+import (
+    "time"
+)
 
 type Payment struct {
     ProjectName string `json:"projectName"`
@@ -47,17 +49,26 @@ type PaySuccessRateInfo struct {
 //}
 
 type PaySuccessMonitor struct {
-    TrySuccessRateLastest10      float64 `json:"trySuccessRateLastest10"`
-    SuccessRateLastest10         float64 `json:"successRateLastest10"`
-    TrySuccessRateLastest100     float64 `json:"trySuccessRateLastest100"`
-    SuccessRateLastest100        float64 `json:"successRateLastest100"`
-    TrySuccessRateLastLastest100 float64 `json:"trySuccessRateLastLastest100"`
-    SuccessRateLastLastest100    float64 `json:"successRateLastLastest100"`
-    TrySuccessRateChange         float64 `json:"trySuccessRateChange"`
-    SuccessRateChange            float64 `json:"successRateChange"`
-    ProjectName                  string  `json:"projectName"`
-    PaymentCode                  string  `json:"paymentCode"`
-    Platform                     string  `json:"platform"`
+    TrySuccessRateLastest10      float64  `json:"trySuccessRateLastest10"`
+    SuccessRateLastest10         float64  `json:"successRateLastest10"`
+    TrySuccessRateLastest100     float64  `json:"trySuccessRateLastest100"`
+    SuccessRateLastest100        float64  `json:"successRateLastest100"`
+    TrySuccessRateLastLastest100 float64  `json:"trySuccessRateLastLastest100"`
+    SuccessRateLastLastest100    float64  `json:"successRateLastLastest100"`
+    TrySuccessRateChange         float64  `json:"trySuccessRateChange"`
+    SuccessRateChange            float64  `json:"successRateChange"`
+    OrderSnListLastest10         []string `json:"orderSnListLastest10"`
+    ProjectName                  string   `json:"projectName"`
+    PaymentCode                  string   `json:"paymentCode"`
+    Platform                     string   `json:"platform"`
+}
+
+type PaySuccessMonitorHistory struct {
+    MonitorList []map[string]float64 `json:"monitorInfo"`
+    OrderSnList [][]string           `json:"orderSnList"`
+    ProjectName string               `json:"projectName"`
+    PaymentCode string               `json:"paymentCode"`
+    Platform    string               `json:"platform"`
 }
 
 type PaySuccessRule struct {
