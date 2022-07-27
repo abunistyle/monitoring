@@ -24,7 +24,6 @@ type PaySuccessMonitor struct {
     ProjectNames                 []string
     Platforms                    []string
     Debug                        bool
-    UseTestMessage               bool
     Rules                        map[string]order.PaySuccessRule
     SkipPayments                 map[string]bool
     TrySuccessRateGaugeVec       *prometheus.GaugeVec
@@ -165,6 +164,7 @@ func (p *PaySuccessMonitor) Init() {
     p.Rules = rules
     p.SkipPayments = map[string]bool{
         "elavee|H5|checkout#sofort":         true,
+        "elavee|H5|checkout#giropay":        true,
         "floryday|H5|wire_transfer_vbridal": true,
         "airydress|H5|dlocal":               true,
     }
@@ -474,19 +474,19 @@ func (p *PaySuccessMonitor) SendNotice() {
             fmt.Println("row: ", string(bytes1))
         }
         if !math.IsNaN(row.TrySuccessRateLastest10) && row.TrySuccessRateLastest10 <= rule.TrySuccessRateLastest10 && !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "trySuccessRateLastest10", row.TrySuccessRateLastest10, row.OrderSnListLastest10) {
-            trySuccessRateMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,近10单尝试支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.TrySuccessRateLastest10)
+            trySuccessRateMessage := fmt.Sprintf("组织：%s\n支付方式：%s\n平台：%s\n近10单尝试支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.TrySuccessRateLastest10)
             trySuccessRateMessageList = append(trySuccessRateMessageList, trySuccessRateMessage)
         }
         if !math.IsNaN(row.SuccessRateLastest10) && row.SuccessRateLastest10 <= rule.SuccessRateLastest10 && !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "successRateLastest10SuccessRateLastest10", row.SuccessRateLastest10, row.OrderSnListLastest10) {
-            successRateMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,近10单支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.SuccessRateLastest10)
+            successRateMessage := fmt.Sprintf("组织：%s\n支付方式：%s\n平台：%s\n近10单支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.SuccessRateLastest10)
             successRateMessageList = append(successRateMessageList, successRateMessage)
         }
         if !math.IsNaN(row.TrySuccessRateChange) && row.TrySuccessRateChange < rule.TrySuccessRateChange && !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "trySuccessRateChange", row.TrySuccessRateChange, row.OrderSnListLastest10) {
-            trySuccessRateChangeMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,尝试支付成功率同比<%f:%f", row.ProjectName, row.PaymentCode, row.Platform, rule.TrySuccessRateChange, row.TrySuccessRateChange)
+            trySuccessRateChangeMessage := fmt.Sprintf("组织：%s\n支付方式：%s\n平台：%s\n近100单尝试支付成功率：%f\n尝试支付成功率同比<%f:%f", row.ProjectName, row.PaymentCode, row.Platform, row.TrySuccessRateLastest100, rule.TrySuccessRateChange, row.TrySuccessRateChange)
             trySuccessRateChangeMessageList = append(trySuccessRateChangeMessageList, trySuccessRateChangeMessage)
         }
         if !math.IsNaN(row.SuccessRateChange) && row.SuccessRateChange < rule.SuccessRateChange && !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "successRateChange", row.SuccessRateChange, row.OrderSnListLastest10) {
-            successRateChangeMessage := fmt.Sprintf("project:%s,支付方式:%s,平台:%s,支付成功率同比<%f:%f", row.ProjectName, row.PaymentCode, row.Platform, rule.SuccessRateChange, row.SuccessRateChange)
+            successRateChangeMessage := fmt.Sprintf("组织：%s\n支付方式：%s\n平台：%s\n近100单支付成功率：%f\n支付成功率同比<%f:%f", row.ProjectName, row.PaymentCode, row.Platform, row.SuccessRateLastest100, rule.SuccessRateChange, row.SuccessRateChange)
             successRateChangeMessageList = append(successRateChangeMessageList, successRateChangeMessage)
         }
     }
@@ -501,12 +501,12 @@ func (p *PaySuccessMonitor) SendNotice() {
         p.RunSendNotice(successRateMessage)
     }
     if len(trySuccessRateChangeMessageList) > 0 {
-        trySuccessRateChangeMessage := "[尝试支付成功率同比变化]\n" + strings.Join(trySuccessRateChangeMessageList, "\n")
+        trySuccessRateChangeMessage := "[尝试支付成功率环比变化]\n" + strings.Join(trySuccessRateChangeMessageList, "\n")
         fmt.Println(trySuccessRateChangeMessage)
         p.RunSendNotice(trySuccessRateChangeMessage)
     }
     if len(successRateChangeMessageList) > 0 {
-        successRateChangeMessage := "[支付成功率同比变化]\n" + strings.Join(successRateChangeMessageList, "\n")
+        successRateChangeMessage := "[支付成功率环比变化]\n" + strings.Join(successRateChangeMessageList, "\n")
         fmt.Println(successRateChangeMessage)
         p.RunSendNotice(successRateChangeMessage)
     }
@@ -556,9 +556,9 @@ func (p *PaySuccessMonitor) RunSendNotice(message string) {
     if p.Debug {
         return
     }
-    if p.UseTestMessage {
-        message = "(测试中，请忽略)" + message
-    }
+    //if p.Debug {
+    //    message = "(测试中，请忽略)" + message
+    //}
     go func() {
         resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
         if err != nil {

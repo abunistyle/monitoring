@@ -27,11 +27,11 @@ type PaySuccessOrder struct {
 }
 
 type PaySuccessRateInfo struct {
-    TrySuccessRateLastest10      float64 `json:"trySuccessRateLastest10"`
+    TrySuccessRateLastest10      float64 `json:"trySuccessRateLastest10"` //最近10单
     SuccessRateLastest10         float64 `json:"successRateLastest10"`
-    TrySuccessRateLastest100     float64 `json:"trySuccessRateLastest100"`
+    TrySuccessRateLastest100     float64 `json:"trySuccessRateLastest100"` //最近100单
     SuccessRateLastest100        float64 `json:"successRateLastest100"`
-    TrySuccessRateLastLastest100 float64 `json:"trySuccessRateLastLastest100"`
+    TrySuccessRateLastLastest100 float64 `json:"trySuccessRateLastLastest100"` //最近101-200单
     SuccessRateLastLastest100    float64 `json:"successRateLastLastest100"`
     TrySuccessRateChange         float64 `json:"trySuccessRate"`
     SuccessRateChange            float64 `json:"successRate"`
