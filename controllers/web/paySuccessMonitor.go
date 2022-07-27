@@ -42,8 +42,8 @@ func (p *PaySuccessMonitor) Init() {
     rules["elavee|PC|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.8,
-        SuccessRateChange:       0.8,
+        TrySuccessRateChange:    0.75,
+        SuccessRateChange:       0.75,
         //TrySuccessRateChange: 0.9,
         //SuccessRateChange:    0.9,
     }
@@ -92,8 +92,8 @@ func (p *PaySuccessMonitor) Init() {
     rules["floryday|PC|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.8,
-        SuccessRateChange:       0.8,
+        TrySuccessRateChange:    0.75,
+        SuccessRateChange:       0.75,
     }
     rules["floryday|PC|paypal"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
