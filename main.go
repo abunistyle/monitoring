@@ -64,17 +64,14 @@ func main() {
     fmt.Println(fmt.Sprintf("application running on port %d", port))
     var projectNames []string
     var platforms []string
-    var useTestMessage bool
     if *moduleName == "fdweb" {
         projectNames = []string{"floryday", "airydress"}
         platforms = []string{"PC", "H5", "APP"}
-        useTestMessage = true
     } else {
         projectNames = []string{"elavee"}
         platforms = []string{"PC", "H5"}
-        useTestMessage = false
     }
-    paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB, ProjectNames: projectNames, Platforms: platforms, Debug: *debug, UseTestMessage: useTestMessage}
+    paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB, ProjectNames: projectNames, Platforms: platforms, Debug: *debug}
     paySuccessMonitor.Init()
     if *debug {
         paySuccessMonitor.RunMonitor()
