@@ -3,6 +3,7 @@ package initialize
 import (
     "errors"
     "fmt"
+    "github.com/go-redis/redis"
     "github.com/ulule/deepcopier"
     "gorm.io/gorm"
     "monitoring/config"
@@ -110,4 +111,17 @@ func InitDBList(myconfig *config.Config) {
         }
         global.SetDBByKey(key, dbMap[indexKey])
     }
+}
+
+func InitRedis(myconfig *config.Config) {
+    client := redis.NewClient(&redis.Options{
+        Addr:     myconfig.Redis.Addr,
+        Password: myconfig.Redis.Password,
+        DB:       myconfig.Redis.Db,
+    })
+    _, err := client.Ping().Result()
+    if err != nil {
+        panic(err.Error())
+    }
+    global.RedisClient = client
 }

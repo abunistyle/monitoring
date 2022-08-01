@@ -4,11 +4,18 @@ import "strconv"
 
 type Config struct {
     Application Application       `yaml:"application"`
+    Redis       Redis             `yaml:"redis"`
     ModuleMap   map[string]Module `yaml:"modules"`
 }
 
 type Application struct {
     Port uint64 `yaml:"port"`
+}
+
+type Redis struct {
+    Addr     string `yaml:"addr"`
+    Password string `yaml:"password"`
+    Db       int    `yaml:"db"`
 }
 
 type Module struct {

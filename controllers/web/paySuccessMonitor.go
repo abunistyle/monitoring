@@ -3,6 +3,7 @@ package web
 import (
     "encoding/json"
     "fmt"
+    "github.com/go-redis/redis"
     "github.com/prometheus/client_golang/prometheus"
     "github.com/prometheus/client_golang/prometheus/promauto"
     "gorm.io/gorm"
@@ -21,6 +22,7 @@ const MaxHistoryListLen = 10
 
 type PaySuccessMonitor struct {
     DB                           *gorm.DB
+    RedisClient                  *redis.Client
     ProjectNames                 []string
     Platforms                    []string
     Debug                        bool
@@ -37,6 +39,16 @@ type PaySuccessMonitor struct {
 
 func (p *PaySuccessMonitor) Init() {
     p.MonitorDataHistroryMap = make(map[string]*order.PaySuccessMonitorHistory)
+    //for _, projectName := range p.ProjectNames {
+    //    cacheKey := "monitoring_" + projectName
+    //    hashValues := p.RedisClient.HGetAll(cacheKey)
+    //    for field, value := range hashValues.Val() {
+    //        var historyData order.PaySuccessMonitorHistory
+    //        json.Unmarshal([]byte(value), &historyData)
+    //        p.MonitorDataHistroryMap[field] = &historyData
+    //    }
+    //}
+
     rules := make(map[string]order.PaySuccessRule)
     rules["elavee|PC|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
@@ -348,6 +360,19 @@ func (p *PaySuccessMonitor) RefreshMonitorDataHistory() {
         })
         p.MonitorDataHistroryMap[key].OrderSnList = append(p.MonitorDataHistroryMap[key].OrderSnList, row.OrderSnListLastest10)
     }
+    //for key, row := range p.MonitorDataHistroryMap {
+    //    cacheKey := "monitoring_" + row.ProjectName
+    //    rowJson, err0 := json.Marshal(&row)
+    //    if err0 != nil {
+    //        fmt.Println(key, cacheKey)
+    //        fmt.Println("hahaha", rowJson, err0)
+    //    }
+    //    err := p.RedisClient.HSet(cacheKey, key, rowJson).Err()
+    //    if err != nil {
+    //       fmt.Println(err.Error())
+    //       return
+    //    }
+    //}
 }
 
 func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {

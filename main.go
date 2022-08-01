@@ -1,6 +1,7 @@
 package main
 
 import (
+    "context"
     "flag"
     "fmt"
     "github.com/pkg/errors"
@@ -15,6 +16,8 @@ import (
     "net/http"
     "os"
 )
+
+var ctx = context.Background()
 
 func main() {
     rootPath := flag.String("r", "./", "请输入程序根路径")
@@ -46,6 +49,8 @@ func main() {
         }
     })()
     initialize.InitDBList(&myconfig)
+    initialize.InitRedis(&myconfig)
+
     //router := initialize.Routers()
     //router.Run()
 
@@ -71,7 +76,7 @@ func main() {
         projectNames = []string{"elavee"}
         platforms = []string{"PC", "H5"}
     }
-    paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB, ProjectNames: projectNames, Platforms: platforms, Debug: *debug}
+    paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB, RedisClient: global.RedisClient, ProjectNames: projectNames, Platforms: platforms, Debug: *debug}
     paySuccessMonitor.Init()
     if *debug {
         paySuccessMonitor.RunMonitor()

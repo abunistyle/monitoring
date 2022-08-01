@@ -1,13 +1,15 @@
 package global
 
 import (
+    "github.com/go-redis/redis"
     "gorm.io/gorm"
     "monitoring/utils"
 )
 
 var (
-    DBList []*gorm.DB
-    DBMap  map[string]*gorm.DB
+    DBList      []*gorm.DB
+    DBMap       map[string]*gorm.DB
+    RedisClient *redis.Client
 )
 
 func GetDBByName(moduleName string, groupName string) (*gorm.DB, bool) {
