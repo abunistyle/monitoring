@@ -49,7 +49,7 @@ func main() {
         }
     })()
     initialize.InitDBList(&myconfig)
-    initialize.InitRedis(&myconfig)
+    //initialize.InitRedis(&myconfig)
 
     //router := initialize.Routers()
     //router.Run()
