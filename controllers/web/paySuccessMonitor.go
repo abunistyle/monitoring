@@ -175,10 +175,13 @@ func (p *PaySuccessMonitor) Init() {
     }
     p.Rules = rules
     p.SkipPayments = map[string]bool{
+        //支付方式需要小写
         "elavee|H5|checkout#sofort":         true,
         "elavee|H5|checkout#giropay":        true,
         "floryday|H5|wire_transfer_vbridal": true,
         "airydress|H5|dlocal":               true,
+        "airydress|H5|braintree#creditcard": true,
+        "airydress|H5|ebanx":                true,
     }
 
     p.TrySuccessRateGaugeVec = promauto.NewGaugeVec(prometheus.GaugeOpts{
