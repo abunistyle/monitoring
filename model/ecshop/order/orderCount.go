@@ -69,7 +69,7 @@ func (cri *CountRateInfo) ValueOf(name string) *CountData {
 type CountData struct {
 	TypeCode            string  `json:"type_code"`           //类型
 	Type                string  `json:"type"`                //类型名称
-	LastHourCount       int64   `json:"lastHourCount"`       //一小时内数量
+	LastHourCount       int64   `json:"lastHourCount"`       //十二小时内数量
 	LastHourCountChange int64   `json:"lastHourCountChange"` //环比变化量
 	LastHourRateChange  float64 `json:"lastHourRateChange"`  //环比变化率
 }
