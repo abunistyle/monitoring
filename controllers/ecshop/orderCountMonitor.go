@@ -46,13 +46,13 @@ func (o *OrderCountMonitor) RefreshMonitorData() {
 	{
 		m, _ := time.ParseDuration("-168h") //1 week
 		endTime := currentTime.Add(m)
-		m, _ = time.ParseDuration("-169h") //1 week and 1 hour
+		m, _ = time.ParseDuration("-180h") //1 week and 12 hour
 		startTime := currentTime.Add(m)
 		o.weekBeforeCountRateInfo = o.GetMonitorData(startTime, endTime)
 	}
 	{
 		endTime := currentTime
-		m, _ := time.ParseDuration("-1h") //1 hour
+		m, _ := time.ParseDuration("-12h") //12 hour
 		startTime := currentTime.Add(m)
 		o.countRateInfo = o.GetMonitorData(startTime, endTime)
 	}
@@ -128,7 +128,7 @@ func (o *OrderCountMonitor) SendNotice() {
 	for key, value := range o.countRateInfo.GetTypes() {
 		if o.countRateInfo.ValueOf(key).LastHourRateChange < rule {
 			rate := strconv.FormatFloat((1-o.countRateInfo.ValueOf(key).LastHourRateChange)*100, 'f', 1, 64)
-			message := fmt.Sprintf("%s:近一小时数据量 %d,比一周前同期下降 %s%%;", value, o.countRateInfo.ValueOf(key).LastHourCount, rate)
+			message := fmt.Sprintf("%s:近十二小时数据量 %d,比一周前同期下降 %s%%;", value, o.countRateInfo.ValueOf(key).LastHourCount, rate)
 			messageList = append(messageList, message)
 		}
 	}
