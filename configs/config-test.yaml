@@ -27,7 +27,7 @@ modules:
       maxIdleConns: 5
   ecshop:
     db:
-      host: 16.163.46.134
+      host: 10.100.4.154
       port: 6033
       dbName: ecshop
       username: erp_ue1
