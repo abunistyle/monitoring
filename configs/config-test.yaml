@@ -30,8 +30,8 @@ modules:
       host: 10.100.4.154
       port: 6033
       dbName: ecshop
-      username: erp_ue1
-      password: QMcR88cra1jv
-      config: charset=utf8mb4&parseTime=True&loc=America%2FLos_Angeles
+      username: fd_erp_ape1
+      password: GO8w2dRrHaUI
+      config: charset=utf8mb4&parseTime=True&loc=Asia%2FShanghai
       maxOpenConns: 20
       maxIdleConns: 5
