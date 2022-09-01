@@ -83,7 +83,7 @@ func (o *OrderCountMonitor) GetCountData(name string, startTime time.Time, endTi
 	case "orderSync": //网站订单同步
 		o.DB.Table("ecshop.ecs_order_info").Where("order_time between ? and ?", startTime, endTime).Count(&count)
 	case "orderConfirmed": //订单确认
-		o.DB.Table("ecshop.ecs_order_info").Where("confirm_time between ? and ?", startTime, endTime).Count(&count)
+		o.DB.Table("ecshop.ecs_order_info").Where("confirm_time between ? and ?", startTime.Unix(), endTime.Unix()).Count(&count)
 	case "orderReserved": //订单预定
 		o.DB.Table("romeo.order_reserve").Where("status = ? and created_at between ? and ?", 1, startTime, endTime).Count(&count)
 	case "dispatch": //采购工单
