@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -55,32 +57,31 @@ func main() {
 	executionJobs := new(ExecutionJobs)
 
 	for rows.Next() {
-
 		row := rows.Scan(&executionJobs.flowJob, &executionJobs.status)
 		if row != nil {
 			fmt.Println("数据为空")
 		}
 
-		if executionJobs.status == 50 {
-			message := "调试中,请忽略" + "\nazkaban任务：" + executionJobs.flowJob + "\n任务状态：killed"
+		if executionJobs.status == 70 {
+			message := "调试中,请忽略" + "\nazkaban任务：" + executionJobs.flowJob + "\n任务状态：failed"
 			fmt.Println(message)
-			/*resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
+			resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-			fmt.Println(resp)*/
+			fmt.Println(resp)
 		}
 
 		if executionJobs.status == 60 {
 			message := "\nazkaban任务：" + executionJobs.flowJob + "\n任务状态：killed"
 			fmt.Println(message)
-			/*resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
+			resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-			fmt.Println(resp)*/
+			fmt.Println(resp)
 		}
 
 	}
