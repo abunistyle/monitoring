@@ -109,7 +109,7 @@ func (o *OrderCountMonitor) GetCountData(name string, startTime time.Time, endTi
 func (o *OrderCountMonitor) RunMonitor() {
 	o.RefreshMonitorData()
 	o.RecordMetrics()
-	o.SendNotice()
+	//o.SendNotice()
 }
 
 func (o *OrderCountMonitor) RecordMetrics() {
