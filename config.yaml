@@ -29,6 +29,7 @@ modules:
       config: charset=utf8mb4&parseTime=True&loc=America%2FLos_Angeles
       maxOpenConns: 20
       maxIdleConns: 5
+
   ecshop:
     db:
       host: 16.163.46.134

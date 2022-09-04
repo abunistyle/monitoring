@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 	"io/ioutil"
 	"monitoring/config"
+	"monitoring/controllers/bigdata"
 	"monitoring/controllers/ecshop"
 	"monitoring/controllers/web"
 	"monitoring/global"
@@ -65,6 +66,8 @@ func main() {
 		webMonitor(orderDB, moduleName, port)
 	case "ecshop":
 		ecshopMonitor(orderDB, port)
+	case "bigdata":
+		bigdataMonitor()
 	default:
 		fmt.Println("不支持的moduleName")
 	}
@@ -119,4 +122,17 @@ func ecshopMonitor(orderDB *gorm.DB, port uint64) {
 	if err != nil {
 		return
 	}
+}
+
+//bigdata监控
+func bigdataMonitor() {
+	azkabanMontior := bigdata.AzkabanMotior{}
+
+	//每小时10分开始调度
+	myCron := cron.New()
+	_, _ = myCron.AddFunc("10 * * * *", func() {
+		azkabanMontior.Sendnotice()
+	})
+	myCron.Start()
+
 }
