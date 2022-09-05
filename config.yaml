@@ -29,6 +29,7 @@ modules:
       config: charset=utf8mb4&parseTime=True&loc=America%2FLos_Angeles
       maxOpenConns: 20
       maxIdleConns: 5
+
   ecshop:
     db:
       host: 16.163.46.134
@@ -36,6 +37,17 @@ modules:
       dbName: ecshop
       username: fd_erp_ape1
       password: GO8w2dRrHaUI
+      config: charset=utf8mb4&parseTime=True&loc=Asia%2FShanghai
+      maxOpenConns: 20
+      maxIdleConns: 5
+
+  bigdata:
+    db:
+      host: 16.163.46.134
+      port: 6033
+      dbName: azkaban
+      username: bigdata_ue2
+      password: bjQdmVLm732z
       config: charset=utf8mb4&parseTime=True&loc=Asia%2FShanghai
       maxOpenConns: 20
       maxIdleConns: 5
