@@ -2,91 +2,63 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/robfig/cron/v3"
-	"gopkg.in/yaml.v2"
 	"gorm.io/gorm"
-	"io/ioutil"
-	"monitoring/config"
 	"monitoring/controllers/bigdata"
 	"monitoring/controllers/ecshop"
+	"monitoring/controllers/ordersync"
 	"monitoring/controllers/web"
 	"monitoring/global"
 	"monitoring/initialize"
+	"monitoring/model/common"
 	"net/http"
-	"os"
 )
 
 var ctx = context.Background()
-var debug *bool
 
 func main() {
-	rootPath := flag.String("r", "./", "请输入程序根路径")
-	configFileName := flag.String("c", "./config.yaml", "请输入配置文件路径")
-	moduleName := flag.String("m", "web", "请输入模块名，比如：web、fdweb")
-	debug = flag.Bool("debug", false, "是否debug，比如：true、false")
-	paramPort := flag.Uint64("p", 0, "请输入端口号，比如：8080")
-	flag.Parse()
-	file, err := ioutil.ReadFile(*configFileName)
-	if err != nil {
-		fmt.Print(err)
-	}
-	fmt.Println(fmt.Sprintf("root path: %s, config file name: %s, module name: %s, debug: %t", *rootPath, *configFileName, *moduleName, *debug))
+	param := initialize.InitParam()
+	fmt.Println(fmt.Sprintf("root path: %s, config file name: %s, module name: %s, debug: %t", *param.RootPath, *param.ConfigFileName, *param.ModuleName, *param.Debug))
 
-	//yaml文件内容影射到结构体中
-	var myconfig config.Config
-	err1 := yaml.Unmarshal(file, &myconfig)
-	if err1 != nil {
-		fmt.Println(err1)
-		os.Exit(1)
-		return
-	}
-
-	port := (func() uint64 {
-		if *paramPort > 0 {
-			return *paramPort
-		} else {
-			return myconfig.Application.Port
-		}
-	})()
-	initialize.InitDBList(&myconfig)
-	orderDB, dbExist := global.GetDBByName(*moduleName, "")
-	if !dbExist {
-		err := errors.New(fmt.Sprintf("module:%s, db not exist!", *moduleName))
-		panic(err)
-	}
-	fmt.Println(fmt.Sprintf("application running on port %d", port))
-	switch *moduleName {
+	switch *param.ModuleName {
 	case "fdweb":
-		webMonitor(orderDB, moduleName, port)
+		webMonitor(param)
 	case "web":
-		webMonitor(orderDB, moduleName, port)
+		webMonitor(param)
 	case "ecshop":
-		ecshopMonitor(orderDB, port)
+		orderSyncMonitor(param)
+		ecshopMonitor(param)
 	case "bigdata":
 		bigdataMonitor()
+	case "order_sync":
+		orderSyncMonitor(param)
 	default:
 		fmt.Println("不支持的moduleName")
 	}
 }
 
 //网站监控
-func webMonitor(orderDB *gorm.DB, moduleName *string, port uint64) {
+func webMonitor(param common.Param) {
+	var db *gorm.DB
 	var projectNames []string
 	var platforms []string
-	if *moduleName == "fdweb" {
+
+	if !initialize.InitDB(*param.ModuleName, &db) {
+		return
+	}
+
+	if *param.ModuleName == "fdweb" {
 		projectNames = []string{"floryday", "airydress"}
 		platforms = []string{"PC", "H5", "APP"}
 	} else {
 		projectNames = []string{"elavee"}
 		platforms = []string{"PC", "H5"}
 	}
-	paySuccessMonitor := web.PaySuccessMonitor{DB: orderDB, RedisClient: global.RedisClient, ProjectNames: projectNames, Platforms: platforms, Debug: *debug}
+	paySuccessMonitor := web.PaySuccessMonitor{DB: db, RedisClient: global.RedisClient, ProjectNames: projectNames, Platforms: platforms, Debug: *param.Debug}
 	paySuccessMonitor.Init()
-	if *debug {
+	if *param.Debug {
 		paySuccessMonitor.RunMonitor()
 	}
 
@@ -96,18 +68,25 @@ func webMonitor(orderDB *gorm.DB, moduleName *string, port uint64) {
 	})
 	myCron.Start()
 
+	fmt.Println(fmt.Sprintf("application running on port %d", *param.Port))
+
 	http.Handle("/metrics/web/paySuccess", promhttp.Handler())
-	var err = http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	var err = http.ListenAndServe(fmt.Sprintf(":%d", *param.Port), nil)
 	if err != nil {
 		return
 	}
 }
 
 //erp监控
-func ecshopMonitor(orderDB *gorm.DB, port uint64) {
-	orderCountMonitor := ecshop.OrderCountMonitor{DB: orderDB, Debug: *debug}
+func ecshopMonitor(param common.Param) {
+	var db *gorm.DB
+
+	if !initialize.InitDB(*param.ModuleName, &db) {
+		return
+	}
+	orderCountMonitor := ecshop.OrderCountMonitor{DB: db, Debug: *param.Debug}
 	orderCountMonitor.Init()
-	if *debug {
+	if *param.Debug {
 		orderCountMonitor.RunMonitor()
 	}
 
@@ -117,8 +96,10 @@ func ecshopMonitor(orderDB *gorm.DB, port uint64) {
 	})
 	myCron.Start()
 
+	fmt.Println(fmt.Sprintf("application running on port %d", *param.Port))
+
 	http.Handle("/metrics/ecshop/orderCount", promhttp.Handler())
-	var err = http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	var err = http.ListenAndServe(fmt.Sprintf(":%d", *param.Port), nil)
 	if err != nil {
 		return
 	}
@@ -135,4 +116,27 @@ func bigdataMonitor() {
 	})
 	myCron.Start()
 
+}
+
+func orderSyncMonitor(param common.Param) {
+	compareMonitor := ordersync.CompareMonitor{Debug: *param.Debug}
+
+	if !initialize.InitDB("fdweb", &compareMonitor.FdWebDB) {
+		return
+	}
+	if !initialize.InitDB("web", &compareMonitor.WebDB) {
+		return
+	}
+	if !initialize.InitDB("ecshop", &compareMonitor.ErpDB) {
+		return
+	}
+	compareMonitor.Init()
+	if *param.Debug {
+		compareMonitor.RunMonitor()
+	}
+	myCron := cron.New()
+	_, _ = myCron.AddFunc("*/30 * * * *", func() {
+		compareMonitor.RunMonitor()
+	})
+	myCron.Start()
 }
