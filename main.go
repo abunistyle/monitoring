@@ -63,11 +63,16 @@ func webMonitor(param common.Param) {
     }
 
     priceMonitor := web.PriceMonitor{DB: db, ProjectNames: projectNames, Debug: *param.Debug}
-    priceMonitor.RunMonitor()
+    if *param.Debug {
+        priceMonitor.RunMonitor()
+    }
 
     myCron := cron.New()
     _, _ = myCron.AddFunc("10 * * * *", func() {
         paySuccessMonitor.RunMonitor()
+    })
+    _, _ = myCron.AddFunc("0 0,12 * * *", func() {
+        priceMonitor.RunMonitor()
     })
     myCron.Start()
 

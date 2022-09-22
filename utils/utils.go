@@ -16,6 +16,18 @@ func ArrayContains[T comparable](s []T, e T) bool {
     return false
 }
 
+func ArrayUnique[T comparable](s []T) []T {
+    result := make([]T, 0, len(s))
+    temp := map[T]struct{}{}
+    for _, item := range s {
+        if _, ok := temp[item]; !ok {
+            temp[item] = struct{}{}
+            result = append(result, item)
+        }
+    }
+    return result
+}
+
 func MapCopy[T comparable](m map[string]T) map[string]T {
     m2 := make(map[string]T, len(m))
     var id string
