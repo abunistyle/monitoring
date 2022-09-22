@@ -30,7 +30,7 @@ func (c *CompareInfo) Compare() {
 	{
 		m, _ := time.ParseDuration("-24h")
 		startTime := currentTime.Add(m)
-		m, _ = time.ParseDuration("-2m")
+		m, _ = time.ParseDuration("-1h")
 		endTime := currentTime.Add(m)
 		//查询网站近一小时支付成功的订单
 		c.WebOrderSnHour = c.GetWebOrderSn(startTime, endTime)
@@ -41,7 +41,7 @@ func (c *CompareInfo) Compare() {
 	{
 		m, _ := time.ParseDuration("-24h")
 		startTime := currentTime.Add(m)
-		m, _ = time.ParseDuration("-1m")
+		m, _ = time.ParseDuration("-30m")
 		endTime := currentTime.Add(m)
 		c.WebOrderSnThirtyMinutes = c.GetWebOrderSn(startTime, endTime)
 		c.ErpOrderSnThirtyMinutes = c.GetErpOrderSn(c.WebOrderSnThirtyMinutes)
