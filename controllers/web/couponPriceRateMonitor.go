@@ -59,12 +59,12 @@ func (p *CouponPriceRateMonitor) RunMonitor() {
         }
         if rate.Rate >= thresholdHigh && rate.LastHourRate >= thresholdHigh {
             // 连续2小时高于高位 触发高级报警
-            msg := fmt.Sprintf("[红包金额占比异常]组织:%s,最近2小时占比分别为:%s,%s. 大于设定阈值:%s,请检查红包设置",projectName,rate.LastHourRate,rate.Rate, thresholdHigh)
+            msg := fmt.Sprintf("\r\n [红包金额占比异常]组织:%s \r\n 最近2小时占比分别为:%f,%f. \r\n 大于设定阈值:%f,请检查红包设置",projectName,rate.LastHourRate,rate.Rate, thresholdHigh)
             log.Print(msg)
             p.RunSendNotice(msg, false)
         } else if rate.Rate >= thresholdLow && rate.LastHourRate >= thresholdLow && rate.LastTwoHourRate >= thresholdLow {
             // 连续3小时高于中位 触发中级报警
-            msg := fmt.Sprintf("[红包金额占比异常]组织:%s,最近3小时占比分别为:%s,%s,%s. 大于设定阈值:%s,请检查红包设置",projectName,rate.LastTwoHourRate,rate.LastHourRate,rate.Rate, thresholdLow)
+            msg := fmt.Sprintf("\r\n [红包金额占比异常]组织:%s \r\n 最近3小时占比分别为:%f,%f,%f. \r\n 大于设定阈值:%f,请检查红包设置",projectName,rate.LastTwoHourRate,rate.LastHourRate,rate.Rate, thresholdLow)
             log.Print(msg)
             p.RunSendNotice(msg, false)
         }
