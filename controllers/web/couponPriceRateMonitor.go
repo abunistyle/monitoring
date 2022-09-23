@@ -151,11 +151,8 @@ AND oi.order_time >= '%s' AND oi.order_time < '%s';`, projectName, startTimeStr,
 
 func (p *CouponPriceRateMonitor) RunSendNotice(message string, voice bool) {
     if p.Debug {
-        return
+        message = "(测试中，请忽略)" + message
     }
-    //if p.Debug {
-    //    message = "(测试中，请忽略)" + message
-    //}
     var voiceStr string
     voiceStr = ""
     if voice {
