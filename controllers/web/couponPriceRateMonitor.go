@@ -25,7 +25,7 @@ type CouponPriceRateMonitor struct {
 
 type OrderBouncePriceRate struct {
     ProjectName  string     `json:"project_name"`
-    Rate         int64      `json:"rate"`
+    Rate         float64      `json:"rate"`
 }
 
 type OrderBouncePriceThreeHourRate struct {
@@ -45,17 +45,17 @@ func (p *CouponPriceRateMonitor) RunMonitor() {
         []string{"project_name"},
     )
     for _, projectName := range p.ProjectNames {
-        rate := p.getCouponPriceRate(projectName)
+        rate := p.GetCouponPriceRate(projectName)
         if !math.IsNaN(rate.Rate) {
-            p.RateGaugeVec.with(prometheus.labels{
+            p.RateGaugeVec.With(prometheus.Labels{
                 "project_name": projectName,
-            }).set(rate.Rate)
+            }).Set(rate.Rate)
         }
-        thresholdHigh = 0.3
-        thresholdLow = 0.15
+        thresholdHigh = 0.2
+        thresholdLow = 0.1
         if projectName == "airydress" {
-            thresholdHigh = 0.2
-            thresholdLow = 0.1
+            thresholdHigh = 0.3
+            thresholdLow = 0.15
         }
         if rate.Rate >= thresholdHigh && rate.LastHourRate >= thresholdHigh {
             // 连续2小时高于高位 触发高级报警
@@ -76,11 +76,11 @@ func (p *CouponPriceRateMonitor) Init() {
     p.MonitorDataHistoryMap = make(map[string]*order.CouponPriceRateMonitorHistory)
     rules := make(map[string]order.CouponPriceRateRule)
     for _, project := range p.ProjectNames {
-        thresholdHigh := 0.3
-        thresholdLow := 0.15
+        thresholdHigh := 0.2
+        thresholdLow := 0.1
         if project == "airydress" {
-            thresholdHigh = 0.2
-            thresholdLow = 0.1
+            thresholdHigh = 0.3
+            thresholdLow = 0.15
         }
         rules[project + "|high"] = order.CouponPriceRateRule{
             Rate: thresholdHigh,
@@ -92,7 +92,7 @@ func (p *CouponPriceRateMonitor) Init() {
     p.Rules = rules
 }
 
-func (p *CouponPriceRateMonitor) getCouponPriceRate(projectName string) OrderBouncePriceThreeHourRate {
+func (p *CouponPriceRateMonitor) GetCouponPriceRate(projectName string) OrderBouncePriceThreeHourRate {
     tmpTime := time.Now()
     newYorkLocation, err := time.LoadLocation("America/Los_Angeles")
     var res OrderBouncePriceThreeHourRate
@@ -115,7 +115,7 @@ func (p *CouponPriceRateMonitor) getCouponPriceRate(projectName string) OrderBou
     ssTimeStr := ssTime.Format("2006-01-02 15:04:05")
     rateLastHour := p.getCouponPriceOneHourRate(projectName, ssTimeStr, startTimeStr)
     // 前3小时
-    sssTime := startTime.Add(m)
+    sssTime := ssTime.Add(m)
     sssTimeStr := sssTime.Format("2006-01-02 15:04:05")
     rateLastTwoHour := p.getCouponPriceOneHourRate(projectName, sssTimeStr, ssTimeStr)
     res = OrderBouncePriceThreeHourRate{
@@ -132,7 +132,7 @@ func (p *CouponPriceRateMonitor) getCouponPriceOneHourRate(projectName string, s
     var result OrderBouncePriceRate
     sql := fmt.Sprintf(`
 SELECT
-	oi.project_name, (SUM(oi.integral - oi.bonus) / SUM(oi.goods_amount)) AS 'rate'
+	oi.project_name, (SUM(-bonus - oi.integral / 100) / SUM(oi.goods_amount)) AS 'rate'
 FROM order_info oi 
 WHERE oi.email NOT REGEXP '@qq.com|@tetx.com|@i9i8.com|@aubnistyle.com|alanyuanzhou@gmail.com'
 AND oi.bonus < 0

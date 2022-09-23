@@ -68,6 +68,7 @@ func webMonitor(param common.Param) {
     }
 
     couponPriceRateMonitor := web.CouponPriceRateMonitor{DB: db, ProjectNames: projectNames, Debug: *param.Debug}
+    couponPriceRateMonitor.Init()
     if *param.Debug {
         couponPriceRateMonitor.RunMonitor()
     }
@@ -79,7 +80,7 @@ func webMonitor(param common.Param) {
     _, _ = myCron.AddFunc("0 0,12 * * *", func() {
         priceMonitor.RunMonitor()
     })
-    _, _ = myCron.addFunc("0 * * * *", func(){
+    _, _ = myCron.AddFunc("0 * * * *", func(){
         couponPriceRateMonitor.RunMonitor()
     })
     myCron.Start()
