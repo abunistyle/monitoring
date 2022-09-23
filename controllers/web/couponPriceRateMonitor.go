@@ -135,7 +135,6 @@ SELECT
 	oi.project_name, (SUM(-bonus - oi.integral / 100) / SUM(oi.goods_amount)) AS 'rate'
 FROM order_info oi 
 WHERE oi.email NOT REGEXP '@qq.com|@tetx.com|@i9i8.com|@aubnistyle.com|alanyuanzhou@gmail.com'
-AND oi.bonus < 0
 AND oi.project_name = '%s'
 AND oi.order_time >= '%s' AND oi.order_time < '%s';`, projectName, startTimeStr, endTimeStr)
     p.DB.Raw(sql).Scan(&resultList)
