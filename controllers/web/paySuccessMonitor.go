@@ -182,6 +182,7 @@ func (p *PaySuccessMonitor) Init() {
         "floryday|H5|dlocal#pse":            true,
         "floryday|H5|checkout#sofort":       true,
         "floryday|PC|dlocal#pse":            true,
+        "floryday|PC|checkout#sofort":       true,
         "airydress|H5|dlocal":               true,
         "airydress|H5|braintree#creditcard": true,
         "airydress|H5|ebanx":                true,
@@ -189,6 +190,7 @@ func (p *PaySuccessMonitor) Init() {
         "airydress|H5|dlocal#pse":           true,
         "airydress|H5|checkout#sofort":      true,
         "airydress|PC|dlocal#pse":           true,
+        "airydress|PC|checkout#sofort":      true,
     }
 
     p.TrySuccessRateGaugeVec = promauto.NewGaugeVec(prometheus.GaugeOpts{
