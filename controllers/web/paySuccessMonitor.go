@@ -7,6 +7,7 @@ import (
     "github.com/prometheus/client_golang/prometheus"
     "github.com/prometheus/client_golang/prometheus/promauto"
     "gorm.io/gorm"
+    "log"
     "math"
     "monitoring/model/web/order"
     "monitoring/utils"
@@ -564,32 +565,32 @@ func (p *PaySuccessMonitor) IsIgnoreSendNotice(projectName string, paymentCode s
         index := len(p.MonitorDataHistroryMap[key].MonitorList) - i - 1
         //防止越界
         if index < 0 {
-            fmt.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 数组越界，报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
+            log.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 数组越界，报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
             return false
         }
         if p.MonitorDataHistroryMap[key].OrderSnList[index] == nil || p.MonitorDataHistroryMap[key].MonitorList[index] == nil || math.IsNaN(p.MonitorDataHistroryMap[key].MonitorList[index][fieldName]) {
-            fmt.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 数据为nil，报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
+            log.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 数据为nil，报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
             return false
         }
         //判断相等
         if math.Abs(p.MonitorDataHistroryMap[key].MonitorList[index][fieldName]-fieldValue) >= 0.000001 {
-            fmt.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 数据相等，报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
+            log.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 数据相等，报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
             return false
         }
 
         md5a := utils.MD5(strings.Join(orderSnList, ","))
         md5b := utils.MD5(strings.Join(p.MonitorDataHistroryMap[key].OrderSnList[index], ","))
         if md5a != md5b {
-            fmt.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 数据有变化，报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
+            log.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 数据有变化，报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
             return false
         }
         sameCount += 1
     }
     if sameCount >= 3 {
-        fmt.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 报警次数已达3次，忽略本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue)
+        log.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 报警次数已达3次，忽略本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue)
         return true
     }
-    fmt.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
+    log.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
     return false
 }
 
