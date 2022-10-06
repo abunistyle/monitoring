@@ -184,6 +184,7 @@ func (p *PaySuccessMonitor) Init() {
         "floryday|H5|checkout#sofort":       true,
         "floryday|H5|checkout#giropay":      true,
         "floryday|H5|ebanx#oxxo":            true,
+        "floryday|H5|ebanx":                 true,
         "floryday|PC|dlocal#pse":            true,
         "floryday|PC|checkout#sofort":       true,
         "airydress|H5|dlocal":               true,
