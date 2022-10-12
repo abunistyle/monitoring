@@ -197,6 +197,7 @@ func (p *PaySuccessMonitor) Init() {
         "airydress|H5|ebanx#oxxo":           true,
         "airydress|PC|dlocal#pse":           true,
         "airydress|PC|checkout#sofort":      true,
+        "airydress|PC|checkout":             true,
     }
 
     p.TrySuccessRateGaugeVec = promauto.NewGaugeVec(prometheus.GaugeOpts{
