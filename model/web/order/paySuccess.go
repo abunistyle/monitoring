@@ -77,3 +77,13 @@ type PaySuccessRule struct {
     TrySuccessRateChange    float64 `json:"trySuccessRateChange"`
     SuccessRateChange       float64 `json:"successRateChange"`
 }
+
+type PaypalTxnAnalysis struct {
+    PaypalTxnId     string `json:"paypalTxnId"`
+    TxnId           string `json:"txnId"`
+    OrderSn         string `json:"orderSn"`
+    Action          string `json:"action"`
+    ResponseCode    string `json:"responseCode"`
+    ResponseMessage string `json:"responseMessage"`
+    ResultType      int64  `json:"resultType"`
+}
