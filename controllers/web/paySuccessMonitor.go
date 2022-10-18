@@ -319,6 +319,7 @@ func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int6
         successRateLastest10, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", float64(successCnt)/float64(allCnt)), 64)
         for i := 0; i < 10; i++ {
             orderSnListLastest10 = append(orderSnListLastest10, orderList[i].OrderSn)
+            //todo 记录有尝试支付的订单,IsIgnoreWithFailureReason使用
         }
     }
     if len(orderList) >= 100 {
@@ -671,13 +672,21 @@ func (p *PaySuccessMonitor) IsIgnoreSendNotice(projectName string, paymentCode s
 // IsIgnoreWithFailureReason 分析失败原因，若是用户原因导致的失败，则返回true/**
 func (p *PaySuccessMonitor) IsIgnoreWithFailureReason(paymentCode string, orderSnList []string) bool {
     //若是近10个订单都是程序原因导致失败，则发送报警
+    isOwnReasonFailureCnt := 0
     for _, orderSn := range orderSnList {
         isOwnReasonFailure := p.IsOwnReasonFailure(paymentCode, orderSn)
-        if !isOwnReasonFailure {
-            log.Println(fmt.Sprintf("%s,%s, failure not own reason, ignore notice!", orderSn, paymentCode))
-            return true
+        if isOwnReasonFailure {
+            log.Println(fmt.Sprintf("%s,%s, failure with own reason!", orderSn, paymentCode))
+            isOwnReasonFailureCnt += 1
+        } else {
+            log.Println(fmt.Sprintf("%s,%s, failure with not own reason!", orderSn, paymentCode))
         }
     }
+    if isOwnReasonFailureCnt == 0 {
+        log.Printf("支付方式:%s,OwnReasonCnt:%d,忽略本次报警\n", paymentCode, isOwnReasonFailureCnt)
+        return true
+    }
+    log.Printf("支付方式:%s,OwnReasonCnt:%d,执行本次报警\n", paymentCode, isOwnReasonFailureCnt)
     return false
 }
 
