@@ -57,6 +57,7 @@ type PaySuccessMonitor struct {
     SuccessRateLastLastest100    float64  `json:"successRateLastLastest100"`
     TrySuccessRateChange         float64  `json:"trySuccessRateChange"`
     SuccessRateChange            float64  `json:"successRateChange"`
+    TryOrderSnListInLastest10    []string `json:"tryOrderSnListInLastest10"`
     OrderSnListLastest10         []string `json:"orderSnListLastest10"`
     ProjectName                  string   `json:"projectName"`
     PaymentCode                  string   `json:"paymentCode"`
@@ -76,4 +77,14 @@ type PaySuccessRule struct {
     SuccessRateLastest10    float64 `json:"successRateLastest10"`
     TrySuccessRateChange    float64 `json:"trySuccessRateChange"`
     SuccessRateChange       float64 `json:"successRateChange"`
+}
+
+type PaypalTxnAnalysis struct {
+    PaypalTxnId     string `json:"paypalTxnId"`
+    TxnId           string `json:"txnId"`
+    OrderSn         string `json:"orderSn"`
+    Action          string `json:"action"`
+    ResponseCode    string `json:"responseCode"`
+    ResponseMessage string `json:"responseMessage"`
+    ResultType      int64  `json:"resultType"`
 }

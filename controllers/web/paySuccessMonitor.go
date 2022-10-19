@@ -21,6 +21,12 @@ import (
 
 const MaxHistoryListLen = 10
 
+const PaypalTxnResultTypeUnknown = 0              //未知
+const PaypalTxnResultTypeSuccess = 1              //支付成功
+const PaypalTxnResultTypeUserResultType = 2       //用户原因导致的失败
+const PaypalTxnResultTypePayCompanyResultType = 3 //支付公司原因导致的失败
+const PaypalTxnResultTypeOwnResultType = 4        //程序自身原因导致的失败
+
 type PaySuccessMonitor struct {
     DB                           *gorm.DB
     RedisClient                  *redis.Client
@@ -120,8 +126,8 @@ func (p *PaySuccessMonitor) Init() {
         SuccessRateChange:       0.6,
     }
     rules["floryday|H5|checkout"] = order.PaySuccessRule{
-        TrySuccessRateLastest10: 0,
-        SuccessRateLastest10:    0,
+        TrySuccessRateLastest10: 1,
+        SuccessRateLastest10:    1,
         TrySuccessRateChange:    0.6,
         SuccessRateChange:       0.6,
     }
@@ -177,27 +183,27 @@ func (p *PaySuccessMonitor) Init() {
     p.Rules = rules
     p.SkipPayments = map[string]bool{
         //支付方式需要小写
-        "elavee|H5|checkout#sofort":         true,
-        "elavee|H5|checkout#giropay":        true,
+        //"elavee|H5|checkout#sofort":         true,
+        //"elavee|H5|checkout#giropay":        true,
         "floryday|H5|wire_transfer_vbridal": true,
         "floryday|H5|dlocal#pse":            true,
-        "floryday|H5|checkout#sofort":       true,
-        "floryday|H5|checkout#giropay":      true,
-        "floryday|H5|ebanx#oxxo":            true,
-        "floryday|H5|ebanx":                 true,
-        "floryday|PC|dlocal#pse":            true,
-        "floryday|PC|checkout#sofort":       true,
+        //"floryday|H5|checkout#sofort":       true,
+        //"floryday|H5|checkout#giropay":      true,
+        "floryday|H5|ebanx#oxxo": true,
+        "floryday|H5|ebanx":      true,
+        "floryday|PC|dlocal#pse": true,
+        //"floryday|PC|checkout#sofort":       true,
         "airydress|H5|dlocal":               true,
         "airydress|H5|braintree#creditcard": true,
         "airydress|H5|ebanx":                true,
-        "airydress|H5|checkout":             true,
-        "airydress|H5|dlocal#pse":           true,
-        "airydress|H5|checkout#sofort":      true,
-        "airydress|H5|checkout#giropay":     true,
-        "airydress|H5|ebanx#oxxo":           true,
-        "airydress|PC|dlocal#pse":           true,
-        "airydress|PC|checkout#sofort":      true,
-        "airydress|PC|checkout":             true,
+        //"airydress|H5|checkout":             true,
+        "airydress|H5|dlocal#pse": true,
+        //"airydress|H5|checkout#sofort":  true,
+        "airydress|H5|checkout#giropay": true,
+        "airydress|H5|ebanx#oxxo":       true,
+        "airydress|PC|dlocal#pse":       true,
+        //"airydress|PC|checkout#sofort":  true,
+        //"airydress|PC|checkout":             true,
     }
 
     p.TrySuccessRateGaugeVec = promauto.NewGaugeVec(prometheus.GaugeOpts{
@@ -255,12 +261,35 @@ func (p *PaySuccessMonitor) GetPaymentList(startTime time.Time, endTime time.Tim
     var result []order.Payment
     startTimeStr := startTime.Format("2006-01-02 15:04:05")
     endTimeStr := endTime.Format("2006-01-02 15:04:05")
-    sql := fmt.Sprintf("SELECT\n    lower(oi.project_name) AS project_name,\n    p.payment_id,\n    p.payment_code,\n    CASE\n        WHEN POSITION('api.' IN oi.from_domain) = 0 THEN 'PC'\n        WHEN POSITION('lq-App' IN ua.agent_type) > 0 THEN 'APP'\n        ELSE 'H5'\n\tEND AS platform\nFROM order_info oi\nLEFT JOIN payment p on p.payment_id = oi.payment_id\nLEFT JOIN user_agent ua ON ua.user_agent_id = oi.user_agent_id\nWHERE oi.order_time BETWEEN '%s' AND '%s'\n  AND oi.payment_id NOT IN (178,179,181,201,203,236,237,238,240)\n  AND oi.email NOT LIKE '%%@tetx.com'\n  AND oi.email NOT LIKE '%%@i9i8.com'\n  AND oi.email NOT LIKE '%%@qq.com'\n  AND oi.email NOT LIKE '%%@163.com'\n  AND oi.email NOT LIKE '%%@jjshouse.com'\n  AND oi.email NOT LIKE '%%@jenjenhouse.com'\n  AND oi.email NOT LIKE '%%@abunistyle.com'\nGROUP BY oi.project_name,oi.payment_id,platform;", startTimeStr, endTimeStr)
+    sql := fmt.Sprintf(`
+SELECT
+    lower(oi.project_name) AS project_name,
+    p.payment_id,
+    p.payment_code,
+    CASE
+        WHEN POSITION('api.' IN oi.from_domain) = 0 THEN 'PC'
+        WHEN POSITION('lq-App' IN ua.agent_type) > 0 THEN 'APP'
+        ELSE 'H5'
+	END AS platform
+FROM order_info oi
+LEFT JOIN payment p on p.payment_id = oi.payment_id
+LEFT JOIN user_agent ua ON ua.user_agent_id = oi.user_agent_id
+WHERE oi.order_time BETWEEN '%s' AND '%s'
+  AND oi.payment_id NOT IN (178,179,181,201,203,236,237,238,240)
+--   AND p.payment_code = 'CHECKOUT#SOFORT'
+  AND oi.email NOT LIKE '%%@tetx.com'
+  AND oi.email NOT LIKE '%%@i9i8.com'
+  AND oi.email NOT LIKE '%%@qq.com'
+  AND oi.email NOT LIKE '%%@163.com'
+  AND oi.email NOT LIKE '%%@jjshouse.com'
+  AND oi.email NOT LIKE '%%@jenjenhouse.com'
+  AND oi.email NOT LIKE '%%@abunistyle.com'
+GROUP BY oi.project_name,oi.payment_id,platform;`, startTimeStr, endTimeStr)
     p.DB.Raw(sql).Scan(&result)
     return result
 }
 
-func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int64, paymentCode string, platform string, startTime time.Time, endTime time.Time) (order.PaySuccessRateInfo, []string) {
+func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int64, paymentCode string, platform string, startTime time.Time, endTime time.Time) (order.PaySuccessRateInfo, []string, []string) {
     var result = order.PaySuccessRateInfo{
         TrySuccessRateLastest10:      math.NaN(),
         SuccessRateLastest10:         math.NaN(),
@@ -273,7 +302,7 @@ func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int6
     }
     orderList := p.GetOrderData(projectName, paymentId, paymentCode, platform, 0, 200, startTime, endTime)
     if len(orderList) == 0 {
-        return result, nil
+        return result, nil, nil
     }
     var trySuccessRateLastest10 float64 = math.NaN()
     var successRateLastest10 float64 = math.NaN()
@@ -284,12 +313,16 @@ func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int6
     var trySuccessRateChange float64 = math.NaN()
     var successRateChange float64 = math.NaN()
     var orderSnListLastest10 []string
+    var tryOrderSnListInLastest10 []string //最后10个订单中有尝试支付的订单
     if len(orderList) >= 10 {
         successCnt, tryCnt, allCnt := p.CalculateSuccessRate(orderList[0:10])
         trySuccessRateLastest10, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", float64(successCnt)/float64(tryCnt)), 64)
         successRateLastest10, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", float64(successCnt)/float64(allCnt)), 64)
         for i := 0; i < 10; i++ {
             orderSnListLastest10 = append(orderSnListLastest10, orderList[i].OrderSn)
+            if orderList[i].TryCnt > 0 {
+                tryOrderSnListInLastest10 = append(tryOrderSnListInLastest10, orderList[i].OrderSn)
+            }
         }
     }
     if len(orderList) >= 100 {
@@ -322,7 +355,7 @@ func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int6
         TrySuccessRateChange:         trySuccessRateChange,
         SuccessRateChange:            successRateChange,
     }
-    return result, orderSnListLastest10
+    return result, orderSnListLastest10, tryOrderSnListInLastest10
 }
 
 func (p *PaySuccessMonitor) CalculateSuccessRate(orderList []order.PaySuccessOrder) (int64, int64, int64) {
@@ -344,7 +377,50 @@ func (p *PaySuccessMonitor) GetOrderData(projectName string, paymentId int64, pa
     var result []order.PaySuccessOrder
     startTimeStr := startTime.Format("2006-01-02 15:04:05")
     endTimeStr := endTime.Format("2006-01-02 15:04:05")
-    sql := fmt.Sprintf("SELECT\n    t0.*,\n    SUM(IF(t0.pt_payment_code = '%s', 1, 0)) AS try_cnt\nFROM\n\t(\n\tSELECT\n\t    oi.project_name,\n\t    oi.order_id,\n\t\toi.order_sn,\n\t\toi.pay_status,\n\t\toi.payment_id,\n\t\tp.payment_code,\n\t\toi.order_time,\n\t\toi.pay_time,\n\t\tCASE\n\t\t\tWHEN POSITION('api.' IN oi.from_domain) = 0 THEN 'PC'\n\t\t\tWHEN POSITION('lq-App' IN ua.agent_type) > 0 THEN 'APP'\n\t\t\tELSE 'H5'\n\t\tEND AS platform,\n\t\tpt.id as pt_id,\n\t\tpt.payment_code as pt_payment_code\n\tFROM\n\t\torder_info oi\n\tLEFT JOIN payment p on p.payment_id = oi.payment_id\n\tLEFT JOIN paypal_txn pt ON pt.order_sn = oi.order_sn\n\tLEFT JOIN user_agent ua ON ua.user_agent_id = oi.user_agent_id\n\tWHERE\n\t    oi.project_name = '%s'\n\t\tAND oi.order_time BETWEEN '%s' AND '%s'\n\t    AND (oi.payment_id = %d OR pt.payment_code = '%s')\n\t\tAND oi.email NOT LIKE '%%@tetx.com'\n\t\tAND oi.email NOT LIKE '%%@i9i8.com'\n\t\tAND oi.email NOT LIKE '%%@qq.com'\n\t\tAND oi.email NOT LIKE '%%@163.com'\n\t\tAND oi.email NOT LIKE '%%@jjshouse.com'\n\t\tAND oi.email NOT LIKE '%%@jenjenhouse.com'\n\t    AND oi.email NOT LIKE '%%@abunistyle.com'\n\tGROUP BY oi.order_sn,pt.payment_code\n\t) t0\nWHERE t0.platform = '%s'\nGROUP BY t0.order_id\nORDER BY t0.order_id DESC\nLIMIT %d, %d", paymentCode, projectName, startTimeStr, endTimeStr, paymentId, paymentCode, platform, offset, limit)
+    sql := fmt.Sprintf(`
+SELECT
+    t0.*,
+    SUM(IF(t0.pt_payment_code = '%s', 1, 0)) AS try_cnt
+FROM
+	(
+	SELECT
+	    oi.project_name,
+	    oi.order_id,
+		oi.order_sn,
+		oi.pay_status,
+		oi.payment_id,
+		p.payment_code,
+		oi.order_time,
+		oi.pay_time,
+		CASE
+			WHEN POSITION('api.' IN oi.from_domain) = 0 THEN 'PC'
+			WHEN POSITION('lq-App' IN ua.agent_type) > 0 THEN 'APP'
+			ELSE 'H5'
+		END AS platform,
+		pt.id as pt_id,
+		pt.payment_code as pt_payment_code
+	FROM
+		order_info oi
+	LEFT JOIN payment p on p.payment_id = oi.payment_id
+	LEFT JOIN paypal_txn pt ON pt.order_sn = oi.order_sn
+	LEFT JOIN user_agent ua ON ua.user_agent_id = oi.user_agent_id
+	WHERE
+	    oi.project_name = '%s'
+		AND oi.order_time BETWEEN '%s' AND '%s'
+	    AND (oi.payment_id = %d OR pt.payment_code = '%s')
+		AND oi.email NOT LIKE '%%@tetx.com'
+		AND oi.email NOT LIKE '%%@i9i8.com'
+		AND oi.email NOT LIKE '%%@qq.com'
+		AND oi.email NOT LIKE '%%@163.com'
+		AND oi.email NOT LIKE '%%@jjshouse.com'
+		AND oi.email NOT LIKE '%%@jenjenhouse.com'
+	    AND oi.email NOT LIKE '%%@abunistyle.com'
+	GROUP BY oi.order_sn,pt.payment_code
+	) t0
+WHERE t0.platform = '%s'
+GROUP BY t0.order_id
+ORDER BY t0.order_id DESC
+LIMIT %d, %d`, paymentCode, projectName, startTimeStr, endTimeStr, paymentId, paymentCode, platform, offset, limit)
     p.DB.Raw(sql).Scan(&result)
     return result
 }
@@ -424,7 +500,7 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
         waitGroup.Add(1)
         payment := payment
         go func() {
-            statisticsData, orderSnListLastest10 := p.GetStatisticsData(payment.ProjectName, payment.PaymentId, payment.PaymentCode, payment.Platform, startTime, endTime)
+            statisticsData, orderSnListLastest10, tryOrderSnListInLastest10 := p.GetStatisticsData(payment.ProjectName, payment.PaymentId, payment.PaymentCode, payment.Platform, startTime, endTime)
             //fmt.Println(statisticsData)
             resultRow := order.PaySuccessMonitor{
                 TrySuccessRateLastest10:      statisticsData.TrySuccessRateLastest10,
@@ -435,6 +511,7 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
                 SuccessRateLastLastest100:    statisticsData.SuccessRateLastLastest100,
                 TrySuccessRateChange:         statisticsData.TrySuccessRateChange,
                 SuccessRateChange:            statisticsData.SuccessRateChange,
+                TryOrderSnListInLastest10:    tryOrderSnListInLastest10,
                 OrderSnListLastest10:         orderSnListLastest10,
                 ProjectName:                  payment.ProjectName,
                 PaymentCode:                  payment.PaymentCode,
@@ -517,11 +594,17 @@ func (p *PaySuccessMonitor) SendNotice() {
         if err == nil {
             fmt.Println("row: ", string(bytes1))
         }
-        if !math.IsNaN(row.TrySuccessRateLastest10) && row.TrySuccessRateLastest10 <= rule.TrySuccessRateLastest10 && !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "trySuccessRateLastest10", row.TrySuccessRateLastest10, row.OrderSnListLastest10) {
+        if !math.IsNaN(row.TrySuccessRateLastest10) &&
+            row.TrySuccessRateLastest10 <= rule.TrySuccessRateLastest10 &&
+            !p.IsIgnoreWithFailureReason(row.PaymentCode, row.OrderSnListLastest10) &&
+            !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "trySuccessRateLastest10", row.TrySuccessRateLastest10, row.OrderSnListLastest10) {
             trySuccessRateMessage := fmt.Sprintf("组织：%s\n支付方式：%s\n平台：%s\n近10单尝试支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.TrySuccessRateLastest10)
             trySuccessRateMessageList = append(trySuccessRateMessageList, trySuccessRateMessage)
         }
-        if !math.IsNaN(row.SuccessRateLastest10) && row.SuccessRateLastest10 <= rule.SuccessRateLastest10 && !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "successRateLastest10SuccessRateLastest10", row.SuccessRateLastest10, row.OrderSnListLastest10) {
+        if !math.IsNaN(row.SuccessRateLastest10) &&
+            row.SuccessRateLastest10 <= rule.SuccessRateLastest10 &&
+            !p.IsIgnoreWithFailureReason(row.PaymentCode, row.OrderSnListLastest10) &&
+            !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "successRateLastest10", row.SuccessRateLastest10, row.OrderSnListLastest10) {
             successRateMessage := fmt.Sprintf("组织：%s\n支付方式：%s\n平台：%s\n近10单支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.SuccessRateLastest10)
             successRateMessageList = append(successRateMessageList, successRateMessage)
         }
@@ -594,6 +677,51 @@ func (p *PaySuccessMonitor) IsIgnoreSendNotice(projectName string, paymentCode s
     }
     log.Printf("project:%s,支付方式:%s,平台:%s,%s:%f, 报警次数已达%d次，执行本次报警\n", projectName, paymentCode, platform, fieldName, fieldValue, sameCount)
     return false
+}
+
+// IsIgnoreWithFailureReason 分析失败原因，若是用户原因导致的失败，则返回true/**
+func (p *PaySuccessMonitor) IsIgnoreWithFailureReason(paymentCode string, orderSnList []string) bool {
+    //若是近10个订单都是程序原因导致失败，则发送报警
+    isOwnReasonFailureCnt := 0
+    for _, orderSn := range orderSnList {
+        isOwnReasonFailure := p.IsOwnReasonFailure(paymentCode, orderSn)
+        if isOwnReasonFailure {
+            log.Println(fmt.Sprintf("%s,%s, failure with own reason!", orderSn, paymentCode))
+            isOwnReasonFailureCnt += 1
+        } else {
+            log.Println(fmt.Sprintf("%s,%s, failure with not own reason!", orderSn, paymentCode))
+        }
+    }
+    if isOwnReasonFailureCnt == 0 {
+        log.Printf("支付方式:%s,OwnReasonCnt:%d,忽略本次报警\n", paymentCode, isOwnReasonFailureCnt)
+        return true
+    }
+    log.Printf("支付方式:%s,OwnReasonCnt:%d,执行本次报警\n", paymentCode, isOwnReasonFailureCnt)
+    return false
+}
+
+func (p *PaySuccessMonitor) IsOwnReasonFailure(paymentCode string, orderSn string) bool {
+    analysisList := p.GetPaypalTxnAnalysis(paymentCode, orderSn)
+    actions := []string{"redirect", "pay", "capture"}
+    failureResultTypes := []int64{PaypalTxnResultTypeUnknown, PaypalTxnResultTypePayCompanyResultType, PaypalTxnResultTypeOwnResultType}
+    for _, analysis := range analysisList {
+        if utils.ArrayContains(actions, analysis.Action) && utils.ArrayContains(failureResultTypes, analysis.ResultType) {
+            return true
+        }
+    }
+    return false
+}
+
+func (p *PaySuccessMonitor) GetPaypalTxnAnalysis(paymentCode string, orderSn string) []order.PaypalTxnAnalysis {
+    var result []order.PaypalTxnAnalysis
+    sql := fmt.Sprintf(`
+select pt.order_sn, pta.*
+from paypal_txn pt
+left join paypal_txn_analysis pta on pt.id = pta.paypal_txn_id
+where pt.order_sn = '%s'
+and pt.payment_code = '%s'`, orderSn, paymentCode)
+    p.DB.Raw(sql).Scan(&result)
+    return result
 }
 
 func (p *PaySuccessMonitor) RunSendNotice(message string) {

@@ -6,6 +6,7 @@ import (
     "github.com/prometheus/client_golang/prometheus/promhttp"
     "github.com/robfig/cron/v3"
     "gorm.io/gorm"
+    "log"
     "monitoring/controllers/bigdata"
     "monitoring/controllers/ecshop"
     "monitoring/controllers/ordersync"
@@ -56,33 +57,44 @@ func webMonitor(param common.Param) {
         projectNames = []string{"elavee"}
         platforms = []string{"PC", "H5"}
     }
-    paySuccessMonitor := web.PaySuccessMonitor{DB: db, RedisClient: global.RedisClient, ProjectNames: projectNames, Platforms: platforms, Debug: *param.Debug}
-    paySuccessMonitor.Init()
-    if *param.Debug {
-        paySuccessMonitor.RunMonitor()
-    }
-
-    priceMonitor := web.PriceMonitor{DB: db, ProjectNames: projectNames, Debug: *param.Debug}
-    if *param.Debug {
-        priceMonitor.RunMonitor()
-    }
-
-    couponPriceRateMonitor := web.CouponPriceRateMonitor{DB: db, ProjectNames: projectNames, Debug: *param.Debug}
-    couponPriceRateMonitor.Init()
-    if *param.Debug {
-        couponPriceRateMonitor.RunMonitor()
-    }
+    fmt.Println(projectNames, platforms)
 
     myCron := cron.New()
-    _, _ = myCron.AddFunc("10 * * * *", func() {
-        paySuccessMonitor.RunMonitor()
-    })
-    _, _ = myCron.AddFunc("0 0,12 * * *", func() {
-        priceMonitor.RunMonitor()
-    })
-    _, _ = myCron.AddFunc("0 * * * *", func(){
-        couponPriceRateMonitor.RunMonitor()
-    })
+
+    if *param.MonitorName == "" || *param.MonitorName == "paySuccess" {
+        log.Println("run paySuccess monitor!")
+        paySuccessMonitor := web.PaySuccessMonitor{DB: db, RedisClient: global.RedisClient, ProjectNames: projectNames, Platforms: platforms, Debug: *param.Debug}
+        paySuccessMonitor.Init()
+        if *param.Debug {
+            paySuccessMonitor.RunMonitor()
+        }
+        _, _ = myCron.AddFunc("10 * * * *", func() {
+            paySuccessMonitor.RunMonitor()
+        })
+    }
+
+    if *param.MonitorName == "" || *param.MonitorName == "price" {
+        log.Println("run price monitor")
+        priceMonitor := web.PriceMonitor{DB: db, ProjectNames: projectNames, Debug: *param.Debug}
+        if *param.Debug {
+            priceMonitor.RunMonitor()
+        }
+        _, _ = myCron.AddFunc("0 0,12 * * *", func() {
+            priceMonitor.RunMonitor()
+        })
+    }
+
+    if *param.MonitorName == "" || *param.MonitorName == "price" {
+        log.Println("run couponPriceRate monitor")
+        couponPriceRateMonitor := web.CouponPriceRateMonitor{DB: db, ProjectNames: projectNames, Debug: *param.Debug}
+        couponPriceRateMonitor.Init()
+        if *param.Debug {
+            couponPriceRateMonitor.RunMonitor()
+        }
+        _, _ = myCron.AddFunc("0 * * * *", func() {
+            couponPriceRateMonitor.RunMonitor()
+        })
+    }
     myCron.Start()
 
     fmt.Println(fmt.Sprintf("application running on port %d", *param.Port))
