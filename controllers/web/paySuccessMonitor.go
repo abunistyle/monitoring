@@ -126,8 +126,8 @@ func (p *PaySuccessMonitor) Init() {
         SuccessRateChange:       0.6,
     }
     rules["floryday|H5|checkout"] = order.PaySuccessRule{
-        TrySuccessRateLastest10: 0,
-        SuccessRateLastest10:    0,
+        TrySuccessRateLastest10: 1,
+        SuccessRateLastest10:    1,
         TrySuccessRateChange:    0.6,
         SuccessRateChange:       0.6,
     }
@@ -289,7 +289,7 @@ GROUP BY oi.project_name,oi.payment_id,platform;`, startTimeStr, endTimeStr)
     return result
 }
 
-func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int64, paymentCode string, platform string, startTime time.Time, endTime time.Time) (order.PaySuccessRateInfo, []string) {
+func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int64, paymentCode string, platform string, startTime time.Time, endTime time.Time) (order.PaySuccessRateInfo, []string, []string) {
     var result = order.PaySuccessRateInfo{
         TrySuccessRateLastest10:      math.NaN(),
         SuccessRateLastest10:         math.NaN(),
@@ -302,7 +302,7 @@ func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int6
     }
     orderList := p.GetOrderData(projectName, paymentId, paymentCode, platform, 0, 200, startTime, endTime)
     if len(orderList) == 0 {
-        return result, nil
+        return result, nil, nil
     }
     var trySuccessRateLastest10 float64 = math.NaN()
     var successRateLastest10 float64 = math.NaN()
@@ -313,13 +313,16 @@ func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int6
     var trySuccessRateChange float64 = math.NaN()
     var successRateChange float64 = math.NaN()
     var orderSnListLastest10 []string
+    var tryOrderSnListInLastest10 []string //最后10个订单中有尝试支付的订单
     if len(orderList) >= 10 {
         successCnt, tryCnt, allCnt := p.CalculateSuccessRate(orderList[0:10])
         trySuccessRateLastest10, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", float64(successCnt)/float64(tryCnt)), 64)
         successRateLastest10, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", float64(successCnt)/float64(allCnt)), 64)
         for i := 0; i < 10; i++ {
             orderSnListLastest10 = append(orderSnListLastest10, orderList[i].OrderSn)
-            //todo 记录有尝试支付的订单,IsIgnoreWithFailureReason使用
+            if orderList[i].TryCnt > 0 {
+                tryOrderSnListInLastest10 = append(tryOrderSnListInLastest10, orderList[i].OrderSn)
+            }
         }
     }
     if len(orderList) >= 100 {
@@ -352,7 +355,7 @@ func (p *PaySuccessMonitor) GetStatisticsData(projectName string, paymentId int6
         TrySuccessRateChange:         trySuccessRateChange,
         SuccessRateChange:            successRateChange,
     }
-    return result, orderSnListLastest10
+    return result, orderSnListLastest10, tryOrderSnListInLastest10
 }
 
 func (p *PaySuccessMonitor) CalculateSuccessRate(orderList []order.PaySuccessOrder) (int64, int64, int64) {
@@ -497,7 +500,7 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
         waitGroup.Add(1)
         payment := payment
         go func() {
-            statisticsData, orderSnListLastest10 := p.GetStatisticsData(payment.ProjectName, payment.PaymentId, payment.PaymentCode, payment.Platform, startTime, endTime)
+            statisticsData, orderSnListLastest10, tryOrderSnListInLastest10 := p.GetStatisticsData(payment.ProjectName, payment.PaymentId, payment.PaymentCode, payment.Platform, startTime, endTime)
             //fmt.Println(statisticsData)
             resultRow := order.PaySuccessMonitor{
                 TrySuccessRateLastest10:      statisticsData.TrySuccessRateLastest10,
@@ -508,6 +511,7 @@ func (p *PaySuccessMonitor) GetMonitorData() []order.PaySuccessMonitor {
                 SuccessRateLastLastest100:    statisticsData.SuccessRateLastLastest100,
                 TrySuccessRateChange:         statisticsData.TrySuccessRateChange,
                 SuccessRateChange:            statisticsData.SuccessRateChange,
+                TryOrderSnListInLastest10:    tryOrderSnListInLastest10,
                 OrderSnListLastest10:         orderSnListLastest10,
                 ProjectName:                  payment.ProjectName,
                 PaymentCode:                  payment.PaymentCode,
@@ -590,11 +594,17 @@ func (p *PaySuccessMonitor) SendNotice() {
         if err == nil {
             fmt.Println("row: ", string(bytes1))
         }
-        if !math.IsNaN(row.TrySuccessRateLastest10) && row.TrySuccessRateLastest10 <= rule.TrySuccessRateLastest10 && !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "trySuccessRateLastest10", row.TrySuccessRateLastest10, row.OrderSnListLastest10) && !p.IsIgnoreWithFailureReason(row.PaymentCode, row.OrderSnListLastest10) {
+        if !math.IsNaN(row.TrySuccessRateLastest10) &&
+            row.TrySuccessRateLastest10 <= rule.TrySuccessRateLastest10 &&
+            !p.IsIgnoreWithFailureReason(row.PaymentCode, row.OrderSnListLastest10) &&
+            !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "trySuccessRateLastest10", row.TrySuccessRateLastest10, row.OrderSnListLastest10) {
             trySuccessRateMessage := fmt.Sprintf("组织：%s\n支付方式：%s\n平台：%s\n近10单尝试支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.TrySuccessRateLastest10)
             trySuccessRateMessageList = append(trySuccessRateMessageList, trySuccessRateMessage)
         }
-        if !math.IsNaN(row.SuccessRateLastest10) && row.SuccessRateLastest10 <= rule.SuccessRateLastest10 && !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "successRateLastest10", row.SuccessRateLastest10, row.OrderSnListLastest10) && !p.IsIgnoreWithFailureReason(row.PaymentCode, row.OrderSnListLastest10) {
+        if !math.IsNaN(row.SuccessRateLastest10) &&
+            row.SuccessRateLastest10 <= rule.SuccessRateLastest10 &&
+            !p.IsIgnoreWithFailureReason(row.PaymentCode, row.OrderSnListLastest10) &&
+            !p.IsIgnoreSendNotice(row.ProjectName, row.PaymentCode, row.Platform, "successRateLastest10", row.SuccessRateLastest10, row.OrderSnListLastest10) {
             successRateMessage := fmt.Sprintf("组织：%s\n支付方式：%s\n平台：%s\n近10单支付成功率:%f", row.ProjectName, row.PaymentCode, row.Platform, row.SuccessRateLastest10)
             successRateMessageList = append(successRateMessageList, successRateMessage)
         }

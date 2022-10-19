@@ -57,6 +57,7 @@ type PaySuccessMonitor struct {
     SuccessRateLastLastest100    float64  `json:"successRateLastLastest100"`
     TrySuccessRateChange         float64  `json:"trySuccessRateChange"`
     SuccessRateChange            float64  `json:"successRateChange"`
+    TryOrderSnListInLastest10    []string `json:"tryOrderSnListInLastest10"`
     OrderSnListLastest10         []string `json:"orderSnListLastest10"`
     ProjectName                  string   `json:"projectName"`
     PaymentCode                  string   `json:"paymentCode"`
