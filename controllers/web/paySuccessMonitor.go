@@ -187,6 +187,7 @@ func (p *PaySuccessMonitor) Init() {
         //"elavee|H5|checkout#giropay":        true,
         "floryday|H5|wire_transfer_vbridal": true,
         "floryday|H5|dlocal#pse":            true,
+        "floryday|H5|checkout":              true,
         //"floryday|H5|checkout#sofort":       true,
         //"floryday|H5|checkout#giropay":      true,
         "floryday|H5|ebanx#oxxo": true,
