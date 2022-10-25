@@ -80,6 +80,7 @@ func (p *NewslettersMonitor) RunSendNotice(message string) {
     if p.Debug {
         return
     }
+    return
     //if p.Debug {
     //    message = "(测试中，请忽略)" + message
     //}
