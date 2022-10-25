@@ -37,7 +37,8 @@ func (p *NewslettersMonitor) RunMonitor() {
         if _, exist := p.LastMonitorDataMap[key]; !exist {
             continue
         }
-        if monitorData.SendCount == p.LastMonitorDataMap[key].SendCount {
+        if (monitorData.SendCount > 0 && monitorData.SendCount == p.LastMonitorDataMap[key].SendCount) ||
+            (monitorData.ArriveCount > 0 && monitorData.ArriveCount == p.LastMonitorDataMap[key].ArriveCount) {
             monitorMsg := fmt.Sprintf("NL系统发送任务异常: [%s]\n前10分钟次任务的发送数量：%d，接口成功数：%d\n目前任务的发送数量：%d，接口成功数：%d\n两次对比没有变化，任务执行异常。", monitorData.NlCode, p.LastMonitorDataMap[key].SendCount, p.LastMonitorDataMap[key].ArriveCount, p.CurrentMonitorDataMap[key].SendCount, p.CurrentMonitorDataMap[key].ArriveCount)
             monitorMsgList = append(monitorMsgList, monitorMsg)
         }
