@@ -9,6 +9,7 @@ import (
     "log"
     "monitoring/controllers/bigdata"
     "monitoring/controllers/ecshop"
+    "monitoring/controllers/newsletter"
     "monitoring/controllers/ordersync"
     "monitoring/controllers/web"
     "monitoring/global"
@@ -35,6 +36,8 @@ func main() {
         bigdataMonitor()
     case "order_sync":
         orderSyncMonitor(param)
+    case "fdnl":
+        nlMonitor(param)
     default:
         fmt.Println("不支持的moduleName")
     }
@@ -168,4 +171,25 @@ func orderSyncMonitor(param common.Param) {
         compareMonitor.RunMonitor()
     })
     myCron.Start()
+}
+
+func nlMonitor(param common.Param) {
+    var db *gorm.DB
+
+    if !initialize.InitDB(*param.ModuleName, &db) {
+        return
+    }
+
+    log.Println("run newsletter monitor!")
+    newslettersMonitor := newsletter.NewslettersMonitor{DB: db, Debug: *param.Debug}
+    newslettersMonitor.Init()
+    if *param.Debug {
+        newslettersMonitor.RunMonitor()
+    }
+    myCron := cron.New()
+    _, _ = myCron.AddFunc("* * * * *", func() {
+        newslettersMonitor.RunMonitor()
+    })
+    myCron.Start()
+    select {}
 }
