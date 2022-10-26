@@ -39,12 +39,12 @@ func (p *NewslettersMonitor) RunMonitor() {
         }
         if (monitorData.SendCount > 0 && monitorData.SendCount == p.LastMonitorDataMap[key].SendCount) ||
             (monitorData.ArriveCount > 0 && monitorData.ArriveCount == p.LastMonitorDataMap[key].ArriveCount) {
-            monitorMsg := fmt.Sprintf("NL系统发送任务异常: [%s]\n前15分钟次任务的发送数量：%d，接口成功数：%d\n目前任务的发送数量：%d，接口成功数：%d\n两次对比没有变化，任务执行异常。", monitorData.NlCode, p.LastMonitorDataMap[key].SendCount, p.LastMonitorDataMap[key].ArriveCount, p.CurrentMonitorDataMap[key].SendCount, p.CurrentMonitorDataMap[key].ArriveCount)
+            monitorMsg := fmt.Sprintf("[%s]\n前15分钟此任务的发送数量：%d，接口成功数：%d\n目前任务的发送数量：%d，接口成功数：%d\n两次对比没有变化，任务执行异常。", monitorData.NlCode, p.LastMonitorDataMap[key].SendCount, p.LastMonitorDataMap[key].ArriveCount, p.CurrentMonitorDataMap[key].SendCount, p.CurrentMonitorDataMap[key].ArriveCount)
             monitorMsgList = append(monitorMsgList, monitorMsg)
         }
     }
     if len(monitorMsgList) > 0 {
-        successRateChangeMessage := strings.Join(monitorMsgList, "\n")
+        successRateChangeMessage := "NL系统发送任务异常: \n" + strings.Join(monitorMsgList, "\n\n")
         fmt.Println(successRateChangeMessage)
         p.RunSendNotice(successRateChangeMessage)
     }
