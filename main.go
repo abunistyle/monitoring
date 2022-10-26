@@ -187,7 +187,7 @@ func nlMonitor(param common.Param) {
         newslettersMonitor.RunMonitor()
     }
     myCron := cron.New()
-    _, _ = myCron.AddFunc("*/15 * * * *", func() {
+    _, _ = myCron.AddFunc("*/30 * * * *", func() {
         newslettersMonitor.RunMonitor()
     })
     myCron.Start()
