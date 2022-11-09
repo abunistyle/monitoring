@@ -158,7 +158,7 @@ func (p *CouponPriceRateMonitor) RunSendNotice(message string, voice bool) {
         voiceStr = "&type=voice"
     }
     go func() {
-        resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s%s", url.QueryEscape(message), voiceStr))
+        resp, err := http.Get(fmt.Sprintf("http://voice.arch800.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s%s", url.QueryEscape(message), voiceStr))
         if err != nil {
             fmt.Println(err)
             return

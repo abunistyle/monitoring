@@ -67,7 +67,7 @@ func (a *AzkabanMotior) Sendnotice() {
 		if executionJobs.status == 50 {
 			message := "azkaban调度" + "\nazkaban任务：" + executionJobs.flowJob + "\n任务状态：failed"
 			fmt.Println(message)
-			resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
+			resp, err := http.Get(fmt.Sprintf("http://voice.arch800.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -78,7 +78,7 @@ func (a *AzkabanMotior) Sendnotice() {
 		if executionJobs.status == 60 {
 			message := "\nazkaban任务：" + executionJobs.flowJob + "\n任务状态：killed"
 			fmt.Println(message)
-			resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
+			resp, err := http.Get(fmt.Sprintf("http://voice.arch800.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
 			if err != nil {
 				fmt.Println(err)
 				return
