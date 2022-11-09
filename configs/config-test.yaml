@@ -3,8 +3,8 @@ application:
 modules:
   web:
     db:
-      host: master.rds.zone
-      port: 3306
+      host: 172.27.31.97
+      port: 6033
       dbName: vbridal
       username: web_ue1
       password: yv4wkse5eMYl
@@ -17,8 +17,8 @@ modules:
 #          dbName: vbridal
   fdweb:
     db:
-      host: webrds.coeridfqtgzw.us-east-1.rds.amazonaws.com
-      port: 3306
+      host: 172.27.31.97
+      port: 6033
       dbName: vbridal
       username: fd_fdwebrds_ue1
       password: xw4BePCuticz
@@ -28,8 +28,8 @@ modules:
 
   ecshop:
     db:
-      host: web-erp.clzkg2oe0ox1.ap-east-1.rds.amazonaws.com
-      port: 3306
+      host: 172.27.31.97
+      port: 6033
       dbName: ecshop
       username: fd_erp_ape1
       password: GO8w2dRrHaUI
@@ -39,8 +39,8 @@ modules:
 
   bigdata:
     db:
-      host: fd-bigdata-azkaban-metadata.chynhkcmxjjm.us-east-2.rds.amazonaws.com
-      port: 3306
+      host: 172.27.31.97
+      port: 6033
       dbName: azkaban
       username: bigdata_ue2
       password: bjQdmVLm732z
@@ -50,8 +50,8 @@ modules:
 
   fdnl:
     db:
-      host: webnl.coeridfqtgzw.us-east-1.rds.amazonaws.com
-      port: 3306
+      host: 172.27.31.97
+      port: 6033
       dbName: vbridal
       username: fd_fdnl_ue1
       password: joigBSfDnx3Y
