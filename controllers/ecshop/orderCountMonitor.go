@@ -147,7 +147,7 @@ func (o *OrderCountMonitor) RunSendNotice(message string) {
 	//	message = "(测试中，请忽略)" + message
 	//}
 	go func() {
-		resp, err := http.Get(fmt.Sprintf("http://voice.abunistyle.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
+		resp, err := http.Get(fmt.Sprintf("http://voice.arch800.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
 		if err != nil {
 			fmt.Println(err)
 			return
