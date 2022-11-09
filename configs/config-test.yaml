@@ -39,8 +39,8 @@ modules:
 
   bigdata:
     db:
-      host: 172.27.31.97
-      port: 6033
+      host: fd-bigdata-azkaban-metadata.chynhkcmxjjm.us-east-2.rds.amazonaws.com
+      port: 3306
       dbName: azkaban
       username: bigdata_ue2
       password: bjQdmVLm732z
