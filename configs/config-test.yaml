@@ -17,7 +17,7 @@ modules:
 #          dbName: vbridal
   fdweb:
     db:
-      host: master.fdrds.zone
+      host: webrds.coeridfqtgzw.us-east-1.rds.amazonaws.com
       port: 3306
       dbName: vbridal
       username: fd_fdwebrds_ue1
@@ -28,8 +28,8 @@ modules:
 
   ecshop:
     db:
-      host: 10.100.4.154
-      port: 6033
+      host: web-erp.clzkg2oe0ox1.ap-east-1.rds.amazonaws.com
+      port: 3306
       dbName: ecshop
       username: fd_erp_ape1
       password: GO8w2dRrHaUI
@@ -50,8 +50,8 @@ modules:
 
   fdnl:
     db:
-      host: 10.100.4.154
-      port: 6033
+      host: webnl.coeridfqtgzw.us-east-1.rds.amazonaws.com
+      port: 3306
       dbName: vbridal
       username: fd_fdnl_ue1
       password: joigBSfDnx3Y
