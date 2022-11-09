@@ -7,7 +7,7 @@ redis:
 modules:
   web:
     db:
-      host: 16.163.46.134
+      host: 43.198.52.10
       port: 6033
       dbName: vbridal
       username: web_ue1
@@ -21,7 +21,7 @@ modules:
 #          dbName: vbridal
   fdweb:
     db:
-      host: 16.163.46.134
+      host: 43.198.52.10
       port: 6033
       dbName: vbridal
       username: fd_fdwebrds_ue1
@@ -32,7 +32,7 @@ modules:
 
   ecshop:
     db:
-      host: 16.163.46.134
+      host: 43.198.52.10
       port: 6033
       dbName: ecshop
       username: fd_erp_ape1
@@ -43,7 +43,7 @@ modules:
 
   bigdata:
     db:
-      host: 16.163.46.134
+      host: 43.198.52.10
       port: 6033
       dbName: azkaban
       username: bigdata_ue2
@@ -54,7 +54,7 @@ modules:
 
   fdnl:
     db:
-      host: 16.163.46.134
+      host: 43.198.52.10
       port: 6033
       dbName: vbridal
       username: fd_fdnl_ue1

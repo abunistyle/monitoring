@@ -3,8 +3,8 @@ application:
 modules:
   web:
     db:
-      host: 10.100.4.154
-      port: 6033
+      host: master.rds.zone
+      port: 3306
       dbName: vbridal
       username: web_ue1
       password: yv4wkse5eMYl
@@ -17,8 +17,8 @@ modules:
 #          dbName: vbridal
   fdweb:
     db:
-      host: 10.100.4.154
-      port: 6033
+      host: master.fdrds.zone
+      port: 3306
       dbName: vbridal
       username: fd_fdwebrds_ue1
       password: xw4BePCuticz
