@@ -60,8 +60,8 @@ func (p *PaySuccessMonitor) Init() {
     rules["elavee|PC|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.75,
-        SuccessRateChange:       0.75,
+        TrySuccessRateChange:    0.74,
+        SuccessRateChange:       0.74,
         //TrySuccessRateChange: 0.9,
         //SuccessRateChange:    0.9,
     }
