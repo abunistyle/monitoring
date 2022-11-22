@@ -110,8 +110,8 @@ func (p *PaySuccessMonitor) Init() {
     rules["floryday|PC|checkout"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
-        TrySuccessRateChange:    0.75,
-        SuccessRateChange:       0.75,
+        TrySuccessRateChange:    0.7,
+        SuccessRateChange:       0.7,
     }
     rules["floryday|PC|paypal"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
