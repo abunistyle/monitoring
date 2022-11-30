@@ -14,7 +14,7 @@ const (
 	USERNAME = "bigdata_ue2"
 	PASSWORD = "bjQdmVLm732z"
 	NETWORK  = "tcp"
-	SERVER   = "16.163.46.134"
+	SERVER   = "43.198.52.10"
 	PORT     = 6033
 	DATABASE = "azkaban"
 )
@@ -65,7 +65,7 @@ func (a *AzkabanMotior) Sendnotice() {
 		}
 
 		if executionJobs.status == 50 {
-			message := "azkaban调度" + "\nazkaban任务：" + executionJobs.flowJob + "\n任务状态：failed"
+			message := "\nazkaban调度" + "\nazkaban任务：" + executionJobs.flowJob + "\n任务状态：failed"
 			fmt.Println(message)
 			resp, err := http.Get(fmt.Sprintf("http://voice.arch800.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
 			if err != nil {
@@ -76,7 +76,7 @@ func (a *AzkabanMotior) Sendnotice() {
 		}
 
 		if executionJobs.status == 60 {
-			message := "\nazkaban任务：" + executionJobs.flowJob + "\n任务状态：killed"
+			message := "\nazkaban调度" + "\nazkaban任务：" + executionJobs.flowJob + "\n任务状态：killed"
 			fmt.Println(message)
 			resp, err := http.Get(fmt.Sprintf("http://voice.arch800.com/notice/singleCallByTts?system=Monitoring&errorMsg=%s", url.QueryEscape(message)))
 			if err != nil {
