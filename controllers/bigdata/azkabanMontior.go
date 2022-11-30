@@ -14,7 +14,7 @@ const (
 	USERNAME = "bigdata_ue2"
 	PASSWORD = "bjQdmVLm732z"
 	NETWORK  = "tcp"
-	SERVER   = "16.163.46.134"
+	SERVER   = "43.198.52.10"
 	PORT     = 6033
 	DATABASE = "azkaban"
 )
