@@ -7,5 +7,4 @@ import (
 func main() {
 	azkabanMontior := bigdata.AzkabanMotior{}
 	azkabanMontior.Sendnotice()
-
 }
