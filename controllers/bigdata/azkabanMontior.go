@@ -11,11 +11,11 @@ import (
 
 //数据库连接信息
 const (
-	USERNAME = "bigdata_ue2"
-	PASSWORD = "bjQdmVLm732z"
+	USERNAME = "admin"
+	PASSWORD = "azkaban-metadata"
 	NETWORK  = "tcp"
-	SERVER   = "43.198.52.10"
-	PORT     = 6033
+	SERVER   = "fd-bigdata-azkaban-metadata.chynhkcmxjjm.us-east-2.rds.amazonaws.com"
+	PORT     = 3306
 	DATABASE = "azkaban"
 )
 
@@ -41,8 +41,7 @@ func (a *AzkabanMotior) Sendnotice() {
 	//获取当日时间-北京时间
 	currentTime := time.Now().Format("2006-01-02 15")
 	fmt.Println(currentTime)
-	//
-	//sql :=fmt.Sprintf("select flow_id,status from azkaban.execution_jobs where '2022-09-01'='%s' limit 1",currentTime)
+
 	sql := "select flow_id,status " +
 		"from azkaban.execution_jobs " +
 		"where DATE_FORMAT(date_add(from_unixtime(end_time/1000,'%Y-%m-%d %H'),interval 7 hour),'%Y-%m-%d %H')<=? " +
