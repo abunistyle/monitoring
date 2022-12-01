@@ -140,6 +140,7 @@ func ecshopMonitor(param common.Param) {
 //bigdata监控
 func bigdataMonitor() {
 	azkabanMontior := bigdata.AzkabanMotior{}
+	fmt.Println("代码执行")
 
 	//每小时10分开始调度
 	myCron := cron.New()
