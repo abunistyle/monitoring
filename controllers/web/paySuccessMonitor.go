@@ -174,7 +174,7 @@ func (p *PaySuccessMonitor) Init() {
         TrySuccessRateChange:    0.7,
         SuccessRateChange:       0.7,
     }
-    rules["airydress|H5|braintree#CREDITCARD"] = order.PaySuccessRule{
+    rules["airydress|H5|braintree#creditcard"] = order.PaySuccessRule{
         TrySuccessRateLastest10: 0,
         SuccessRateLastest10:    0,
         TrySuccessRateChange:    0.55,
